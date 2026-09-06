@@ -1,1 +1,0 @@
-# chocobot_guardian

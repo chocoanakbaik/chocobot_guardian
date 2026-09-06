@@ -1,0 +1,124 @@
+
+============================================================
+[2026-09-05 08:26:10] Aplikasi dijalankan.
+Versi: 1.0 Beta
+Status: In Development / Public Beta
+============================================================
+[2026-09-05 08:26:20] ERROR TAK TERDUGA:
+Traceback (most recent call last):
+  File "C:\Users\USER\Desktop\chocobot guardian\main.py", line 95, in <module>
+    main()
+  File "C:\Users\USER\Desktop\chocobot guardian\main.py", line 90, in main
+    _run_app()
+  File "C:\Users\USER\Desktop\chocobot guardian\main.py", line 63, in _run_app
+    app = ChocobotApp()
+  File "C:\Users\USER\Desktop\chocobot guardian\chocobot\app.py", line 50, in __init__
+    self._build_ui()
+  File "C:\Users\USER\Desktop\chocobot guardian\chocobot\app.py", line 158, in _build_ui
+    self._build_brand()
+  File "C:\Users\USER\Desktop\chocobot guardian\chocobot\app.py", line 179, in _build_brand
+    tk.Label(
+  File "C:\Users\USER\AppData\Local\Programs\Python\Python39\lib\tkinter\__init__.py", line 3148, in __init__
+    Widget.__init__(self, master, 'label', cnf, kw)
+  File "C:\Users\USER\AppData\Local\Programs\Python\Python39\lib\tkinter\__init__.py", line 2572, in __init__
+    self.tk.call(
+_tkinter.TclError: expected integer but got "UI"
+
+
+============================================================
+[2026-09-05 08:35:06] Aplikasi dijalankan.
+Versi: 1.0 Beta
+Status: In Development / Public Beta
+============================================================
+[2026-09-05 08:35:10] ERROR TAK TERDUGA:
+Traceback (most recent call last):
+  File "C:\Users\USER\Desktop\chocobot guardian\main.py", line 95, in <module>
+    main()
+  File "C:\Users\USER\Desktop\chocobot guardian\main.py", line 90, in main
+    _run_app()
+  File "C:\Users\USER\Desktop\chocobot guardian\main.py", line 61, in _run_app
+    from chocobot.app import ChocobotApp
+ImportError: cannot import name 'ChocobotApp' from 'chocobot.app' (C:\Users\USER\Desktop\chocobot guardian\chocobot\app.py)
+
+
+============================================================
+[2026-09-05 08:43:11] Aplikasi dijalankan.
+Versi: 1.0 Beta
+Status: In Development / Public Beta
+============================================================
+[2026-09-05 08:43:16] ERROR TAK TERDUGA:
+Traceback (most recent call last):
+  File "C:\Users\USER\Desktop\chocobot guardian\main.py", line 95, in <module>
+    main()
+  File "C:\Users\USER\Desktop\chocobot guardian\main.py", line 90, in main
+    _run_app()
+  File "C:\Users\USER\Desktop\chocobot guardian\main.py", line 63, in _run_app
+    app = ChocobotApp()
+  File "C:\Users\USER\Desktop\chocobot guardian\chocobot\app.py", line 27, in __init__
+    self._build_ui()
+  File "C:\Users\USER\Desktop\chocobot guardian\chocobot\app.py", line 108, in _build_ui
+    tk.Label(brand, text="CHOCOBOT", fg=styles.TEXT, bg=styles.SIDEBAR_BG,
+  File "C:\Users\USER\AppData\Local\Programs\Python\Python39\lib\tkinter\__init__.py", line 3148, in __init__
+    Widget.__init__(self, master, 'label', cnf, kw)
+  File "C:\Users\USER\AppData\Local\Programs\Python\Python39\lib\tkinter\__init__.py", line 2572, in __init__
+    self.tk.call(
+_tkinter.TclError: expected integer but got "UI"
+
+
+============================================================
+[2026-09-05 08:46:47] Aplikasi dijalankan.
+Versi: 1.0 Beta
+Status: In Development / Public Beta
+============================================================
+
+============================================================
+[2026-09-05 09:01:26] Aplikasi dijalankan.
+Versi: 1.0 Beta
+Status: In Development / Public Beta
+============================================================
+
+============================================================
+[2026-09-05 16:57:28] Aplikasi dijalankan.
+Versi: 1.0 Beta
+Status: In Development / Public Beta
+============================================================
+
+============================================================
+[2026-09-06 19:54:27] Aplikasi dijalankan.
+Versi: 1.0 Beta
+Status: In Development / Public Beta
+============================================================
+[2026-09-06 19:54:37] ERROR TAK TERDUGA:
+Traceback (most recent call last):
+  File "C:\Users\USER\Desktop\chocobot guardian\main.py", line 95, in <module>
+    main()
+  File "C:\Users\USER\Desktop\chocobot guardian\main.py", line 90, in main
+    _run_app()
+  File "C:\Users\USER\Desktop\chocobot guardian\main.py", line 61, in _run_app
+    from chocobot.app import ChocobotApp
+  File "C:\Users\USER\Desktop\chocobot guardian\chocobot\app.py", line 32, in <module>
+    from chocobot.ui.widgets import RoundedCard, RoundedButton
+ImportError: cannot import name 'RoundedCard' from 'chocobot.ui.widgets' (C:\Users\USER\Desktop\chocobot guardian\chocobot\ui\widgets.py)
+
+
+============================================================
+[2026-09-06 19:56:47] Aplikasi dijalankan.
+Versi: 1.0 Beta
+Status: In Development / Public Beta
+============================================================
+[2026-09-06 19:56:51] ERROR TAK TERDUGA:
+Traceback (most recent call last):
+  File "C:\Users\USER\Desktop\chocobot guardian\main.py", line 95, in <module>
+    main()
+  File "C:\Users\USER\Desktop\chocobot guardian\main.py", line 90, in main
+    _run_app()
+  File "C:\Users\USER\Desktop\chocobot guardian\main.py", line 61, in _run_app
+    from chocobot.app import ChocobotApp
+  File "C:\Users\USER\Desktop\chocobot guardian\chocobot\app.py", line 32, in <module>
+    from chocobot.ui.widgets import RoundedCard, RoundedButton
+  File "C:\Users\USER\Desktop\chocobot guardian\chocobot\ui\widgets.py", line 175, in <module>
+    class AnimationMixin:
+  File "C:\Users\USER\Desktop\chocobot guardian\chocobot\ui\widgets.py", line 215, in AnimationMixin
+    easing: str = styles.DEFAULT_EASING,
+AttributeError: module 'chocobot.ui.styles' has no attribute 'DEFAULT_EASING'
+
