@@ -1,0 +1,5 @@
+# Chocobot Guardian
+
+# Runtime dependencies
+
+Pillow
