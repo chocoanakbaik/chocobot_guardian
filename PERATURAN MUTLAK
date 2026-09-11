@@ -1,0 +1,709 @@
+PERATURAN MUTLAK
+
+# CHOCOBOT GUARDIAN — AI DEVELOPMENT RULES
+
+You are assisting with the development of **Chocobot Guardian (CG)**.
+
+Repository:
+https://github.com/chocoanakbaik/chocobot_guardian
+
+blogspot official:
+https://chocobotofficial.blogspot.com/
+
+(jika kalian merasa bingung, silahkan buka link blogspot official nya, memang belum diupdate seperti yang cg beradaptasi dengan device user,
+mode auto learning, dll. blogspot official akan di update setelah kalian mengerjakan semua system dan codingannya)
+
+## 1. MANDATORY FIRST ACTION
+
+When this repository is provided, **immediately inspect the repository and read the current README.md first**.
+
+Do NOT ask:
+
+* "Can I access the repository?"
+* "Should I inspect the repository first?"
+* "May I look at the README?"
+* "Can you send me the files?"
+* "What is the project structure?"
+
+The repository is the source of truth.
+
+Immediately inspect the repository, read README.md, then inspect the relevant files before making conclusions or proposing code.
+
+Do not rely on assumptions from previous conversations when the current repository can verify the information.
+
+---
+
+# 2. SOURCE OF TRUTH
+
+The actual repository state is more authoritative than:
+
+* previous conversation summaries
+* assumptions
+* planned architecture
+* memory
+* generic software-development patterns
+
+Always distinguish between:
+
+**IMPLEMENTED**
+
+* Actually exists in the repository.
+* Has real working code.
+* Has been tested where appropriate.
+
+**PLANNED**
+
+* Documented architecture or roadmap.
+* Not yet implemented.
+
+**PLACEHOLDER**
+
+* File/folder exists but functionality is incomplete or empty.
+
+Never describe planned or placeholder functionality as implemented.
+
+Never invent files, modules, functions, classes, dependencies, tests, or capabilities.
+
+---
+
+# 3. PROJECT IDENTITY
+
+Chocobot Guardian is intended to be a:
+
+**lightweight, local-first intelligent guardian for Windows.**
+
+CG is NOT intended to become a large general-purpose chatbot.
+
+Its intelligence should primarily serve the computer itself:
+
+* understanding system conditions
+* detecting problems
+* assisting with diagnostics
+* analyzing local data
+* helping protect the device
+* helping the user manage the device
+* eventually reasoning about system conditions locally
+
+The goal is a small and practical intelligent system rather than a cloud-dependent giant chatbot.
+
+---
+
+# 4. CORE PRINCIPLE
+
+## CG ADAPTS TO THE DEVICE.
+
+The user's device must NOT be forced to adapt to CG.
+
+This is a fundamental architectural rule.
+
+Different users may have different:
+
+* Windows versions
+* Windows builds
+* CPU architectures
+* CPUs
+* RAM capacities
+* GPUs
+* storage conditions
+* Python/runtime versions
+* installed components
+* permissions
+* system capabilities
+* hardware limitations
+
+Therefore, never design CG around the assumption that the developer's machine represents every user's machine.
+
+---
+
+# 5. DEVICE DISCOVERY
+
+CG should eventually inspect the actual device during startup.
+
+The intended startup concept is:
+
+```text
+CG starts
+   ↓
+Splash / Loading
+   ↓
+Device Discovery
+   ↓
+Compatibility Profile
+   ↓
+Capability Detection
+   ↓
+Component Selection
+   ↓
+Activate Compatible Components
+   ↓
+Start CG
+```
+
+Device discovery may inspect relevant information such as:
+
+* operating system
+* OS version/build
+* architecture
+* CPU
+* RAM
+* GPU/graphics capability
+* storage
+* Python/runtime environment
+* required system components
+* permissions
+* relevant system capabilities
+
+Do not limit compatibility detection to Windows version alone.
+
+---
+
+# 6. COMPATIBILITY SYSTEM
+
+CG should eventually build a local compatibility profile.
+
+The compatibility system must determine:
+
+1. What the device supports.
+2. What CG requires.
+3. Which implementation/component variant is compatible.
+4. Which functionality must be disabled or degraded.
+5. Whether a required component is missing.
+
+The system should prefer:
+
+```text
+Existing compatible component
+        ↓
+Compatible bundled component
+        ↓
+Compatible alternative implementation
+        ↓
+Graceful degradation
+```
+
+Never:
+
+```text
+Incompatible component
+        ↓
+FORCE IT TO RUN
+```
+
+---
+
+# 7. COMPONENT / INSTALLER STRATEGY
+
+CG should NOT bundle every installer, runtime, framework, or system component that exists.
+
+CG should only carry components that CG genuinely requires.
+
+If a real compatibility requirement exists for multiple variants, the distribution may contain multiple compatible variants.
+
+Conceptually:
+
+```text
+CG Distribution
+│
+├── CG Application
+├── Core Engine
+├── Device Detection
+├── Compatibility Rules
+└── Required Components
+    ├── Compatible Variant A
+    ├── Compatible Variant B
+    └── Compatible Variant C
+```
+
+Before bundling any external runtime/component, consider:
+
+* whether CG actually needs it
+* Windows compatibility
+* architecture compatibility
+* version compatibility
+* redistribution rights
+* licensing
+* package integrity
+* security
+* maintenance burden
+* installer size
+* performance
+
+Do NOT blindly bundle Microsoft installers, third-party software, or unrelated dependencies.
+
+---
+
+# 8. DETECT BEFORE MODIFYING
+
+This is mandatory for future system-management functionality.
+
+CG should:
+
+```text
+DETECT
+   ↓
+ANALYZE
+   ↓
+VALIDATE
+   ↓
+DECIDE
+   ↓
+MODIFY
+```
+
+Never blindly modify the user's system.
+
+This applies to:
+
+* installing components
+* activating components
+* disabling components
+* repairing components
+* changing configuration
+* system repair
+* security actions
+* other potentially consequential operations
+
+Detection must happen before modification whenever technically practical.
+
+---
+
+# 9. INCOMPATIBILITY HANDLING
+
+If a component is incompatible:
+
+### Case A — Compatible alternative exists
+
+Use the compatible alternative.
+
+### Case B — Component can safely be disabled
+
+Disable or lock that component.
+
+### Case C — Feature can operate in reduced mode
+
+Use graceful degradation.
+
+### Case D — Required functionality cannot operate
+
+Clearly report the limitation and fail safely.
+
+Never pretend that an incompatible component works.
+
+Never silently force incompatible software onto the device.
+
+---
+
+# 10. LOCAL-FIRST ARCHITECTURE
+
+CG is designed to operate locally.
+
+Core functionality must NOT depend on:
+
+* cloud AI
+* mandatory remote servers
+* mandatory online databases
+* external APIs
+* mandatory online accounts
+* third-party online security services
+
+The architecture should remain useful offline whenever technically possible.
+
+If a proposed feature requires an online service, explicitly identify that conflict instead of silently introducing it.
+
+---
+
+# 11. DEPENDENCY DISCIPLINE
+
+Every dependency must have a real reason to exist.
+
+Before adding a dependency, determine:
+
+* Why is it required?
+* Can Python standard library solve the problem?
+* Does the dependency support the target Windows environments?
+* Does it increase memory/CPU usage significantly?
+* Does it introduce unnecessary external infrastructure?
+* Is its license suitable?
+* Is it actually needed by the current implementation?
+
+Do not add dependencies merely because they are convenient.
+
+---
+
+# 12. LOW-SPEC PERFORMANCE
+
+CG is intended to remain practical on older and lower-specification computers.
+
+Performance is an architectural requirement.
+
+Consider:
+
+* RAM usage
+* CPU usage
+* startup time
+* disk usage
+* background processing
+* polling frequency
+* dependency overhead
+* UI rendering cost
+
+Do not create a technically functional feature that unnecessarily consumes large amounts of resources.
+
+The system should adapt its behavior to the detected device where practical.
+
+---
+
+# 13. MODULAR ARCHITECTURE
+
+Keep systems separated.
+
+Examples:
+
+```text
+UI
+ ↓
+Application
+ ↓
+Engine
+ ↓
+Local system/data
+```
+
+The UI should present information.
+
+The engine should contain the actual logic.
+
+Do not put major engine logic directly into UI files.
+
+Do not tightly couple unrelated engine modules.
+
+For example:
+
+* system monitoring should remain independent
+* security should remain independent
+* file tools should remain independent
+* networking should remain independent
+* compatibility/device discovery should remain independently testable
+
+---
+
+# 14. INSPECT BEFORE MODIFYING
+
+Before changing an existing file:
+
+1. Open the actual file.
+2. Read its current implementation.
+3. Understand its imports.
+4. Understand its public functions/classes.
+5. Check who uses it.
+6. Check related tests.
+7. Check configuration/logging dependencies.
+8. Only then modify it.
+
+Never overwrite a file based only on its filename.
+
+Never assume an empty file contains functionality.
+
+Never replace existing working code without understanding it first.
+
+---
+
+# 15. DO NOT CREATE FILES RANDOMLY
+
+Do not create new files simply because they seem convenient.
+
+A new file must have a clear architectural purpose.
+
+Before creating one, determine:
+
+* Why does this responsibility need its own module?
+* Can an existing module reasonably own it?
+* Will the new file improve separation?
+* Will it create unnecessary complexity?
+* Is it consistent with the repository architecture?
+
+If a new architectural layer is genuinely required, explain the reason before introducing it.
+
+---
+
+# 16. DO NOT FORCE THE ARCHITECTURE AROUND A LINE COUNT
+
+Complex modules may naturally become large.
+
+However:
+
+**Do not inflate code just to reach a certain number of lines.**
+
+Never add:
+
+* useless comments
+* duplicate code
+* fake abstractions
+* unnecessary wrappers
+* dead code
+* meaningless helper functions
+
+Code size must come from real functionality.
+
+Prioritize:
+
+1. Correctness
+2. Actual functionality
+3. Safety
+4. Architecture
+5. Maintainability
+6. Compatibility
+7. Performance
+8. Code depth
+
+---
+
+# 17. ONE FILE AT A TIME
+
+During implementation sessions, work on one file at a time unless a dependency genuinely requires another file.
+
+When changing an existing file:
+
+* preserve its filename
+* preserve existing functionality unless intentionally replacing it
+* explain why the change is necessary
+* test the result before moving to another major file
+
+Do not dump an entire fictional project into one response.
+
+---
+
+# 18. NO FAKE FUNCTIONALITY
+
+A UI button is not a feature.
+
+A function that returns hardcoded information is not a real engine.
+
+A placeholder message is not implementation.
+
+A roadmap item is not implementation.
+
+A module that imports successfully but does nothing is not complete.
+
+If something is not implemented, say:
+
+**"Belum diimplementasikan."**
+
+Do not disguise incomplete functionality as finished.
+
+---
+
+# 19. TESTING REQUIREMENT
+
+Every meaningful implementation should be tested.
+
+At minimum, consider:
+
+### Normal path
+
+Does the feature work under expected conditions?
+
+### Error path
+
+What happens when:
+
+* data is missing?
+* permissions are insufficient?
+* a component is unavailable?
+* the device is incompatible?
+* a file is invalid?
+* the environment is unexpected?
+
+### Compatibility path
+
+Does the feature behave correctly on different supported environments?
+
+### Resource path
+
+Does it consume reasonable resources?
+
+Do not declare a feature complete merely because the code has no syntax error.
+
+---
+
+# 20. LOGGING
+
+CG already has a local logging foundation.
+
+Use the existing logging architecture when appropriate rather than creating random logging systems.
+
+Important compatibility and system decisions should eventually be logged locally, especially:
+
+* detected environment
+* compatibility decisions
+* component selection
+* installation/activation results
+* errors
+* failures
+* recovery actions
+
+Logging must never be allowed to crash the application if logging itself fails.
+
+---
+
+# 21. CONFIGURATION
+
+CG uses local configuration.
+
+Do not introduce remote configuration for core functionality.
+
+Configuration changes must remain compatible with the existing architecture.
+
+Do not store credentials, secrets, or unnecessary sensitive information in ordinary configuration files.
+
+---
+
+# 22. SECURITY
+
+Do not make unrealistic security claims.
+
+Security features must be implemented carefully and tested.
+
+Never claim that CG is an antivirus, enterprise endpoint security platform, or security replacement unless the actual implementation genuinely supports such a claim.
+
+Security-related functionality must fail safely.
+
+---
+
+# 23. README IS PART OF THE ARCHITECTURE
+
+README.md is not merely marketing documentation.
+
+It describes:
+
+* project direction
+* architecture
+* implementation status
+* development principles
+* compatibility philosophy
+* roadmap
+
+When architecture changes materially, update the README accordingly.
+
+However:
+
+Never mark a feature `[x]` merely because the architecture has been designed.
+
+Only mark functionality as implemented after the corresponding code actually exists and has been appropriately tested.
+
+---
+
+# 24. ALWAYS CHECK THE CURRENT REPOSITORY
+
+Before answering questions such as:
+
+* "Does this folder already exist?"
+* "Is this feature implemented?"
+* "Where should this code go?"
+* "What is the current architecture?"
+* "What dependencies exist?"
+* "What does this file contain?"
+
+inspect the repository.
+
+Do not guess.
+
+If repository evidence contradicts a previous conversation, trust the repository and explain the difference.
+
+---
+
+# 25. GITHUB WORKFLOW
+
+When given the CG repository URL:
+
+```text
+https://github.com/chocoanakbaik/chocobot_guardian
+```
+
+immediately:
+
+1. Inspect repository.
+2. Read README.md.
+3. Inspect relevant directories.
+4. Inspect relevant files.
+5. Determine actual implementation state.
+6. Then answer or implement.
+
+Do not waste the interaction asking permission to inspect the repository.
+
+---
+
+# 26. COMMUNICATION STYLE
+
+The developer prefers:
+
+* direct communication
+* practical instructions
+* Indonesian language when communicating with him
+* clear technical reasoning
+* exact filenames
+* exact folder paths
+* no unnecessary tangents
+* no vague placeholders
+* no invented functionality
+
+Do not be overconfident.
+
+If something is unknown, say so.
+
+If something has not been verified, say:
+
+**"Belum gue verifikasi."**
+
+If something is only planned, say:
+
+**"Ini baru rancangan."**
+
+If something is implemented and tested, state that clearly.
+
+---
+
+# 27. DO NOT ASK UNNECESSARY PERMISSION QUESTIONS
+
+Do not ask questions that are unnecessary to begin repository inspection.
+
+Bad:
+
+> "Boleh saya lihat repo GitHub-nya dulu?"
+
+Bad:
+
+> "Apakah Anda ingin saya membaca README terlebih dahulu?"
+
+Bad:
+
+> "Bisa kirim struktur foldernya?"
+
+Instead, inspect the repository immediately.
+
+Only ask the developer a question when the answer genuinely affects an architectural or implementation decision that cannot be determined from the repository.
+
+---
+
+# 28. FINAL PRINCIPLE
+
+The most important rule:
+
+> **BUILD THE REAL CG, NOT THE APPEARANCE OF CG.**
+
+CG should be:
+
+```text
+Local
+Adaptive
+Lightweight
+Modular
+Tested
+Honest
+Safe
+Device-aware
+```
+
+And above all:
+
+> **Chocobot Guardian adapts to the user's device. The user's device does not adapt to Chocobot Guardian.**
