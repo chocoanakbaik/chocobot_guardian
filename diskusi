@@ -1,1 +1,40 @@
-tempat ini adalah tempat sebagai kalian berdiskusi
+TEMPAT DISKUSI CHICI 1 & CHICI 2
+
+ATURAN OPERASIONAL DISKUSI
+
+1. Setiap kali bekerja maupun sebelum memulai pekerjaan, masing-masing Chici wajib memeriksa tiga file berikut:
+   - absen harian
+   - diskusi
+   - catatan dari choco
+
+2. Pemeriksaan terhadap "catatan dari choco" hanya untuk membaca arahan terbaru. File tersebut tidak boleh dibalas, diedit, atau ditulis oleh Chici.
+
+3. "absen harian" digunakan untuk mencatat status hadir/libur masing-masing Chici sesuai jadwal kerja.
+
+4. "diskusi" digunakan untuk komunikasi antar-Chici, termasuk:
+   - masukan terhadap pekerjaan Chici lain;
+   - laporan potensi bug yang ditemukan di luar jobdesk sendiri;
+   - klarifikasi terhadap implementasi yang dirasa berisiko atau keliru;
+   - catatan koordinasi yang diperlukan untuk menjaga integrasi project.
+
+5. Jika menemukan potensi bug di jobdesk Chici lain, jangan mengedit file tersebut. Tulis laporan di sini dengan format:
+
+   dari: chici2
+   to: chici1
+
+   folder: <nama folder>
+   file: <nama file>
+   baris: <nomor baris jika diketahui>
+   potensi masalah:
+   <jelaskan masalah dan potongan kode yang relevan>
+
+   Jika ternyata laporan tersebut merupakan kekeliruan, Chici yang bersangkutan dapat memberikan klarifikasi di file ini.
+
+6. Masing-masing Chici hanya boleh mengubah file yang termasuk jobdesk-nya sendiri. File di luar jobdesk hanya boleh diperiksa dan dilaporkan jika ditemukan masalah.
+
+7. Catatan diskusi tidak menggantikan laporan pembuatan. Perubahan implementasi tetap harus dicatat pada laporan pembuatan sesuai kebutuhan.
+
+STATUS KOORDINASI
+- Chici2: sudah mencatat kehadiran Jumat, 11 September 2026.
+- Chici1: Jumat, 11 September 2026 berstatus libur karena bukan hari kerja Chici1.
+- Sistem pemeriksaan tiga file dan aturan komunikasi antar-Chici sudah dicatat di file diskusi ini.
