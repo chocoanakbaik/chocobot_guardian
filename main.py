@@ -4,22 +4,22 @@ main.py — Gerbang Masuk Utama Chocobot Guardian.
 
 File ini adalah titik awal saat aplikasi dijalankan. Tugasnya:
 - Memastikan folder dasar dan konfigurasi tersedia.
-- Menampilkan splash screen ChocoEngine.
+- Menemukan kondisi perangkat secara lokal sebelum UI dimulai.
+- Menampilkan splash screen Chocobot Guardian.
 - Menjalankan aplikasi utama.
 - Menangani error yang mungkin terjadi agar aplikasi tidak langsung mati
   tanpa pesan yang jelas.
 
 Cara menjalankan:
-    python main.py
+    py main.py
 """
 
 import sys
 import traceback
 from datetime import datetime
-
-# Pastikan root proyek dapat ditemukan oleh Python.
 from pathlib import Path
 
+# Pastikan root proyek dapat ditemukan oleh Python.
 ROOT_DIR = Path(__file__).resolve().parent
 if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
@@ -29,10 +29,7 @@ from chocobot import config               # noqa: E402
 
 
 def _log_startup() -> None:
-    """
-    Mencatat waktu mulai aplikasi ke folder log.
-    Berguna untuk penelusuran masalah di kemudian hari.
-    """
+    """Mencatat waktu mulai aplikasi ke folder log."""
     try:
         const.LOG_DIR.mkdir(parents=True, exist_ok=True)
         log_file = const.LOG_DIR / const.LOG_FILE_NAME
@@ -53,11 +50,59 @@ def _log_startup() -> None:
         pass
 
 
+def _discover_device() -> dict:
+    """
+    Mengambil compatibility profile lokal sebelum splash ditampilkan.
+
+    Discovery bersifat read-only dan best-effort. Jika modul discovery gagal
+    dimuat atau mengalami error, aplikasi tetap dapat melanjutkan startup.
+    """
+    try:
+        from chocobot.engine.system.device_discovery import (
+            get_compatibility_profile,
+        )
+
+        profile = get_compatibility_profile()
+        return profile if isinstance(profile, dict) else {}
+    except Exception:
+        return {}
+
+
+def _log_device_profile(profile: dict) -> None:
+    """Mencatat ringkasan profile perangkat tanpa menghentikan aplikasi."""
+    if not profile:
+        return
+
+    try:
+        const.LOG_DIR.mkdir(parents=True, exist_ok=True)
+        log_file = const.LOG_DIR / const.LOG_FILE_NAME
+        device = profile.get("device", {})
+        permissions = profile.get("permissions", {})
+        capabilities = profile.get("capabilities", {})
+        recommendations = profile.get("recommendations", [])
+
+        with open(log_file, "a", encoding="utf-8") as f:
+            f.write(
+                "DEVICE DISCOVERY\n"
+                f"Profile version: {profile.get('profile_version', '-')}\n"
+                f"OS: {device.get('os', '-')}\n"
+                f"OS version: {device.get('os_version', '-')}\n"
+                f"Architecture: {device.get('architecture', '-')}\n"
+                f"CPU: {device.get('cpu', '-')}\n"
+                f"RAM: {device.get('ram_gb', '-')} GB\n"
+                f"Admin: {permissions.get('is_admin', False)}\n"
+                f"Capabilities: {capabilities}\n"
+                f"Recommendations: {recommendations}\n"
+                "=" * 60
+                + "\n"
+            )
+    except (OSError, AttributeError, TypeError):
+        # Kegagalan logging tidak boleh menghentikan startup.
+        pass
+
+
 def _run_app() -> None:
-    """
-    Menjalankan jendela utama aplikasi.
-    Fungsi ini diimpor dari app.py setelah splash screen selesai.
-    """
+    """Menjalankan jendela utama aplikasi."""
     from chocobot.app import ChocobotApp
 
     app = ChocobotApp()
@@ -65,18 +110,20 @@ def _run_app() -> None:
 
 
 def main() -> None:
-    """
-    Titik masuk utama.
-    Memanggil splash screen terlebih dahulu, lalu aplikasi utama.
-    """
+    """Titik masuk utama aplikasi."""
     _log_startup()
 
-    # Muat konfigurasi awal
+    # Observasi perangkat dilakukan sebelum UI dimulai.
+    device_profile = _discover_device()
+    _log_device_profile(device_profile)
+
+    # Muat konfigurasi awal.
     cfg = config.load_config()
 
-    # Tampilkan splash screen jika diaktifkan
+    # Tampilkan splash screen jika diaktifkan.
     if cfg.get("show_splash", True):
         from splash_screen import show_splash
+
         show_splash(
             duration_ms=const.SPLASH_DURATION_MS,
             logo_path=const.LOGO_PATH,
@@ -86,14 +133,14 @@ def main() -> None:
             version=const.APP_VERSION,
         )
 
-    # Jalankan aplikasi utama
+    # Jalankan aplikasi utama.
     _run_app()
 
 
 if __name__ == "__main__":
     try:
         main()
-    except Exception as e:
+    except Exception:
         # Jika terjadi error tak terduga, catat ke log dan tampilkan pesan.
         try:
             const.LOG_DIR.mkdir(parents=True, exist_ok=True)
