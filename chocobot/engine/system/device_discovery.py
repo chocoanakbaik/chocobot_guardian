@@ -38,6 +38,24 @@ def _safe_text(value: Any, default: str = UNKNOWN) -> str:
     return text or default
 
 
+def _safe_float(value: Any, default: float = 0.0) -> float:
+    """Convert numeric observations defensively, preserving best-effort discovery."""
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        return default
+    return number if number >= 0 else default
+
+
+def _safe_int(value: Any, default: int = 0) -> int:
+    """Convert integer observations defensively."""
+    try:
+        number = int(value)
+    except (TypeError, ValueError):
+        return default
+    return number if number >= 0 else default
+
+
 def _get_windows_build() -> str:
     """Return the Windows build number when Python exposes it."""
     if os.name != "nt":
@@ -73,13 +91,25 @@ def _is_windows_admin() -> bool | None:
 
 def _get_permission_profile() -> Dict[str, Any]:
     """Describe useful local permissions without requesting elevation."""
-    cwd = os.getcwd()
-    readable = os.access(cwd, os.R_OK)
-    writable = os.access(cwd, os.W_OK)
+    try:
+        cwd = os.getcwd()
+    except (OSError, FileNotFoundError):
+        cwd = None
+
+    if not cwd:
+        readable = False
+        writable = False
+    else:
+        try:
+            readable = bool(os.access(cwd, os.R_OK))
+            writable = bool(os.access(cwd, os.W_OK))
+        except (OSError, TypeError):
+            readable = False
+            writable = False
 
     return {
-        "current_directory_readable": bool(readable),
-        "current_directory_writable": bool(writable),
+        "current_directory_readable": readable,
+        "current_directory_writable": writable,
         "is_windows_admin": _is_windows_admin(),
     }
 
@@ -104,8 +134,8 @@ def _build_capabilities(system_info: Dict[str, Any], permissions: Dict[str, Any]
     runtime = system_info.get("runtime", {})
     gpu = system_info.get("gpu", {})
 
-    total_memory = float(memory.get("total_gib", 0.0) or 0.0)
-    free_storage = float(storage.get("free_gib", 0.0) or 0.0)
+    total_memory = _safe_float(memory.get("total_gib"))
+    free_storage = _safe_float(storage.get("free_gib"))
     runtime_available = runtime.get("version", UNKNOWN) != UNKNOWN
     gpu_available = bool(gpu.get("available", False))
 
@@ -122,7 +152,7 @@ def _build_recommendations(system_info: Dict[str, Any], capabilities: Dict[str, 
     """Return deterministic, non-invasive recommendations for future selection."""
     recommendations: List[str] = []
     memory = system_info.get("memory", {})
-    total_memory = float(memory.get("total_gib", 0.0) or 0.0)
+    total_memory = _safe_float(memory.get("total_gib"))
 
     if 0 < total_memory < 4:
         recommendations.append("Use the most lightweight compatible component variants.")
@@ -149,7 +179,14 @@ def discover_device() -> Dict[str, Any]:
     does not install packages, request administrator elevation, edit files, or
     change operating-system settings.
     """
-    system_info = get_system_info()
+    try:
+        system_info = get_system_info()
+    except Exception:
+        system_info = {}
+
+    if not isinstance(system_info, dict):
+        system_info = {}
+
     permissions = _get_permission_profile()
 
     os_info = system_info.get("os", {})
@@ -157,9 +194,18 @@ def discover_device() -> Dict[str, Any]:
     memory_info = system_info.get("memory", {})
     runtime_info = system_info.get("runtime", {})
 
+    if not isinstance(os_info, dict):
+        os_info = {}
+    if not isinstance(cpu_info, dict):
+        cpu_info = {}
+    if not isinstance(memory_info, dict):
+        memory_info = {}
+    if not isinstance(runtime_info, dict):
+        runtime_info = {}
+
     architecture = _safe_text(os_info.get("architecture"))
     process_architecture = _get_process_architecture()
-    total_memory = float(memory_info.get("total_gib", 0.0) or 0.0)
+    total_memory = _safe_float(memory_info.get("total_gib"))
 
     capabilities = _build_capabilities(system_info, permissions)
     recommendations = _build_recommendations(system_info, capabilities)
@@ -175,7 +221,7 @@ def discover_device() -> Dict[str, Any]:
             "architecture": architecture,
             "process_architecture": process_architecture,
             "cpu": _safe_text(cpu_info.get("name")),
-            "logical_processors": int(cpu_info.get("logical_processors", 0) or 0),
+            "logical_processors": _safe_int(cpu_info.get("logical_processors")),
             "memory_gib": total_memory,
             "memory_tier": _memory_tier(total_memory),
             "python_version": _safe_text(runtime_info.get("version")),
