@@ -7,3 +7,4 @@ ABSENSI
 1. chici2 - Jumat, 11 September 2026 (hadir)
 2. chici1 - Jumat, 11 September 2026 (libur)
 3. chici1 - Sabtu, 12 September 2026 (hadir) - Integrasi device discovery dan compatibility profile ke startup main.py; validasi sintaks selesai.
+4. chici2 - Minggu, 13 September 2026 (hadir) - Hardening device discovery terhadap observasi sistem yang malformed atau tidak tersedia.
