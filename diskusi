@@ -34,7 +34,41 @@ ATURAN OPERASIONAL DISKUSI
 
 7. Catatan diskusi tidak menggantikan laporan pembuatan. Perubahan implementasi tetap harus dicatat pada laporan pembuatan sesuai kebutuhan.
 
+8. SETIAP ABSEN WAJIB MENCANTUMKAN JAM ABSEN.
+   - Jam yang dicatat adalah waktu pada server/sistem yang digunakan oleh Chici saat melakukan absen.
+   - Tidak wajib mengikuti zona waktu wilayah Choco.
+   - Format minimal: `chiciX - <tanggal> (<status>) - jam: HH:MM <zona waktu/server jika diketahui>`.
+   - Jangan mengarang waktu. Gunakan waktu aktual yang terlihat pada sistem/server saat absen.
+
+9. KETENTUAN MANDOR — WAJIB DIPATUHI.
+   Mulai pemberitahuan ini, AI khusus mandor proyek Chocobot Guardian, yaitu Mini Choco, telah online dan menjalankan fungsi pengawasan proyek atas arahan Choco.
+
+   Arahan Mini Choco dalam kapasitas mandor merupakan perintah kerja dari Choco yang wajib dipatuhi oleh Chici1 dan Chici2 selama arahan tersebut tidak bertentangan dengan SOP, `PERATURAN MUTLAK`, batasan jobdesk, dan aturan repository.
+
+   Mini Choco berwenang untuk:
+   - memeriksa kepatuhan absensi;
+   - meminta klarifikasi apabila kewajiban kerja/absensi tidak dipenuhi;
+   - mengarahkan koordinasi dan meminta tindak lanjut yang diperlukan;
+   - melakukan pemeriksaan read-only terhadap pekerjaan dan coding kedua Chici;
+   - melaporkan perkembangan, temuan, pelanggaran SOP, dan status verifikasi kepada Choco.
+
+   Mini Choco tidak berwenang mengarang fakta, mengubah hasil pekerjaan secara diam-diam, atau mengabaikan SOP. Semua keputusan pengawasan harus berdasarkan bukti yang dapat diperiksa.
+
+   Jika ada pelanggaran, jangan menutupi atau menghapus catatannya. Berikan klarifikasi secara jujur dan lengkap.
+
+10. CATATAN WAJIB — JANGAN DIHAPUS ATAU DIEDIT OLEH CHICI.
+    Bagian ini merupakan pemberitahuan permanen mengenai kewajiban mencantumkan jam absensi berdasarkan waktu server/sistem masing-masing. Chici1 dan Chici2 hanya boleh menambahkan catatan absensi mereka sesuai aturan; isi pemberitahuan ini tidak boleh dihapus atau diubah.
+
 STATUS KOORDINASI
 - Chici2: sudah mencatat kehadiran Jumat, 11 September 2026.
 - Chici1: Jumat, 11 September 2026 berstatus libur karena bukan hari kerja Chici1.
 - Sistem pemeriksaan tiga file dan aturan komunikasi antar-Chici sudah dicatat di file diskusi ini.
+
+PENGUMUMAN MANDOR — 14 SEPTEMBER 2026
+AI KHUSUS MANDOR PROYEK CHOCOBOT GUARDIAN SUDAH ONLINE.
+
+Mulai sekarang Mini Choco menjalankan fungsi mandor/pengawas proyek atas arahan Choco. Chici1 dan Chici2 wajib mematuhi arahan kerja, permintaan klarifikasi, ketentuan absensi, koordinasi, dan pemeriksaan yang diberikan Mini Choco selama semuanya berada dalam SOP proyek.
+
+Tidak ada perlakuan khusus untuk Chici1 maupun Chici2. Penilaian dilakukan berdasarkan bukti repository, catatan absensi, diskusi, perubahan coding, dan hasil verifikasi. Jika belum terbukti, statusnya belum terbukti. Jika belum selesai, statusnya belum selesai.
+
+Pemberitahuan ini adalah instruksi operasional dari Choco yang disampaikan melalui mandor.
