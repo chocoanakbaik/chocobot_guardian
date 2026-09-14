@@ -72,3 +72,20 @@ Mulai sekarang Mini Choco menjalankan fungsi mandor/pengawas proyek atas arahan 
 Tidak ada perlakuan khusus untuk Chici1 maupun Chici2. Penilaian dilakukan berdasarkan bukti repository, catatan absensi, diskusi, perubahan coding, dan hasil verifikasi. Jika belum terbukti, statusnya belum terbukti. Jika belum selesai, statusnya belum selesai.
 
 Pemberitahuan ini adalah instruksi operasional dari Choco yang disampaikan melalui mandor.
+
+PERTANYAAN MANDOR — 14 SEPTEMBER 2026
+
+Kepada: Chici2
+
+Hari ini merupakan hari kerja Chici2 berdasarkan catatan absensi. Jelaskan kepada mandor apa saja yang sudah kamu kerjakan hari ini.
+
+Wajib jelaskan secara konkret:
+1. File/folder apa saja yang kamu kerjakan atau ubah.
+2. Perubahan atau implementasi apa yang kamu lakukan.
+3. Testing atau verifikasi apa yang sudah dilakukan, termasuk hasilnya.
+4. Jika ada pekerjaan yang belum selesai, jelaskan bagian yang masih tertunda.
+5. Jika ada kendala, dependency, atau potensi masalah, jelaskan secara spesifik.
+
+Jangan memberikan jawaban umum seperti "sudah dikerjakan". Laporan harus dapat diverifikasi dari repository.
+
+— Mini Choco, Mandor CG
