@@ -28,26 +28,31 @@ from chocobot import constants as const   # noqa: E402
 from chocobot import config               # noqa: E402
 
 
-def _log_startup() -> None:
-    """Mencatat waktu mulai aplikasi ke folder log."""
+def _append_log(text: str) -> None:
+    """Menambahkan satu blok teks ke log lokal secara best-effort."""
     try:
         const.LOG_DIR.mkdir(parents=True, exist_ok=True)
         log_file = const.LOG_DIR / const.LOG_FILE_NAME
         with open(log_file, "a", encoding="utf-8") as f:
-            f.write(
-                "\n"
-                + "=" * 60
-                + "\n"
-                + f"[{datetime.now().strftime(const.LOG_TIME_FORMAT)}] "
-                + "Aplikasi dijalankan.\n"
-                + f"Versi: {const.APP_VERSION}\n"
-                + f"Status: {const.DEVELOPMENT_STATUS}\n"
-                + "=" * 60
-                + "\n"
-            )
-    except OSError:
-        # Kegagalan menulis log tidak boleh menghentikan aplikasi.
+            f.write(text)
+    except (OSError, TypeError):
+        # Kegagalan logging tidak boleh menghentikan aplikasi.
         pass
+
+
+def _log_startup() -> None:
+    """Mencatat waktu mulai aplikasi ke folder log."""
+    _append_log(
+        "\n"
+        + "=" * 60
+        + "\n"
+        + f"[{datetime.now().strftime(const.LOG_TIME_FORMAT)}] "
+        + "Aplikasi dijalankan.\n"
+        + f"Versi: {const.APP_VERSION}\n"
+        + f"Status: {const.DEVELOPMENT_STATUS}\n"
+        + "=" * 60
+        + "\n"
+    )
 
 
 def _discover_device() -> dict:
@@ -63,8 +68,24 @@ def _discover_device() -> dict:
         )
 
         profile = get_compatibility_profile()
-        return profile if isinstance(profile, dict) else {}
-    except Exception:
+        if isinstance(profile, dict):
+            return profile
+
+        _append_log(
+            "DEVICE DISCOVERY\n"
+            "Status: invalid profile type; expected dict.\n"
+            + "=" * 60
+            + "\n"
+        )
+        return {}
+    except Exception as exc:
+        _append_log(
+            "DEVICE DISCOVERY\n"
+            "Status: unavailable; startup continued in degraded mode.\n"
+            f"Reason: {type(exc).__name__}: {exc}\n"
+            + "=" * 60
+            + "\n"
+        )
         return {}
 
 
@@ -74,31 +95,33 @@ def _log_device_profile(profile: dict) -> None:
         return
 
     try:
-        const.LOG_DIR.mkdir(parents=True, exist_ok=True)
-        log_file = const.LOG_DIR / const.LOG_FILE_NAME
         device = profile.get("device", {})
         permissions = profile.get("permissions", {})
         capabilities = profile.get("capabilities", {})
         recommendations = profile.get("recommendations", [])
 
-        with open(log_file, "a", encoding="utf-8") as f:
-            f.write(
-                "DEVICE DISCOVERY\n"
-                f"Profile version: {profile.get('profile_version', '-')}\n"
-                f"OS: {device.get('os', '-')}\n"
-                f"OS version: {device.get('os_version', '-')}\n"
-                f"Architecture: {device.get('architecture', '-')}\n"
-                f"CPU: {device.get('cpu', '-')}\n"
-                f"RAM: {device.get('ram_gb', '-')} GB\n"
-                f"Admin: {permissions.get('is_admin', False)}\n"
-                f"Capabilities: {capabilities}\n"
-                f"Recommendations: {recommendations}\n"
-                "=" * 60
-                + "\n"
-            )
-    except (OSError, AttributeError, TypeError):
-        # Kegagalan logging tidak boleh menghentikan startup.
-        pass
+        _append_log(
+            "DEVICE DISCOVERY\n"
+            f"Profile version: {profile.get('profile_version', '-')}\n"
+            f"OS: {device.get('os', '-')}\n"
+            f"OS version: {device.get('os_version', '-')}\n"
+            f"Architecture: {device.get('architecture', '-')}\n"
+            f"CPU: {device.get('cpu', '-')}\n"
+            f"RAM: {device.get('ram_gb', '-')} GB\n"
+            f"Admin: {permissions.get('is_admin', False)}\n"
+            f"Capabilities: {capabilities}\n"
+            f"Recommendations: {recommendations}\n"
+            + "=" * 60
+            + "\n"
+        )
+    except (AttributeError, TypeError):
+        # Profile malformed; startup tetap berjalan tanpa memaksa struktur.
+        _append_log(
+            "DEVICE DISCOVERY\n"
+            "Status: malformed profile; profile logging skipped.\n"
+            + "=" * 60
+            + "\n"
+        )
 
 
 def _run_app() -> None:
@@ -142,17 +165,11 @@ if __name__ == "__main__":
         main()
     except Exception:
         # Jika terjadi error tak terduga, catat ke log dan tampilkan pesan.
-        try:
-            const.LOG_DIR.mkdir(parents=True, exist_ok=True)
-            log_file = const.LOG_DIR / const.LOG_FILE_NAME
-            with open(log_file, "a", encoding="utf-8") as f:
-                f.write(
-                    f"[{datetime.now().strftime(const.LOG_TIME_FORMAT)}] "
-                    f"ERROR TAK TERDUGA:\n"
-                    f"{traceback.format_exc()}\n"
-                )
-        except OSError:
-            pass
+        _append_log(
+            f"[{datetime.now().strftime(const.LOG_TIME_FORMAT)}] "
+            "ERROR TAK TERDUGA:\n"
+            f"{traceback.format_exc()}\n"
+        )
 
         print("Terjadi kesalahan tak terduga saat menjalankan Chocobot.")
         print("Detail error telah dicatat di folder log.")
