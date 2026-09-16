@@ -56,6 +56,11 @@ def _safe_int(value: Any, default: int = 0) -> int:
     return number if number >= 0 else default
 
 
+def _as_mapping(value: Any) -> Dict[str, Any]:
+    """Return a dictionary only when an observation has the expected shape."""
+    return value if isinstance(value, dict) else {}
+
+
 def _get_windows_build() -> str:
     """Return the Windows build number when Python exposes it."""
     if os.name != "nt":
@@ -129,10 +134,10 @@ def _memory_tier(total_gib: float) -> str:
 
 def _build_capabilities(system_info: Dict[str, Any], permissions: Dict[str, Any]) -> Dict[str, bool]:
     """Derive conservative capabilities from already-detected facts."""
-    memory = system_info.get("memory", {})
-    storage = system_info.get("storage", {})
-    runtime = system_info.get("runtime", {})
-    gpu = system_info.get("gpu", {})
+    memory = _as_mapping(system_info.get("memory"))
+    storage = _as_mapping(system_info.get("storage"))
+    runtime = _as_mapping(system_info.get("runtime"))
+    gpu = _as_mapping(system_info.get("gpu"))
 
     total_memory = _safe_float(memory.get("total_gib"))
     free_storage = _safe_float(storage.get("free_gib"))
@@ -151,7 +156,7 @@ def _build_capabilities(system_info: Dict[str, Any], permissions: Dict[str, Any]
 def _build_recommendations(system_info: Dict[str, Any], capabilities: Dict[str, bool]) -> List[str]:
     """Return deterministic, non-invasive recommendations for future selection."""
     recommendations: List[str] = []
-    memory = system_info.get("memory", {})
+    memory = _as_mapping(system_info.get("memory"))
     total_memory = _safe_float(memory.get("total_gib"))
 
     if 0 < total_memory < 4:
@@ -189,19 +194,10 @@ def discover_device() -> Dict[str, Any]:
 
     permissions = _get_permission_profile()
 
-    os_info = system_info.get("os", {})
-    cpu_info = system_info.get("cpu", {})
-    memory_info = system_info.get("memory", {})
-    runtime_info = system_info.get("runtime", {})
-
-    if not isinstance(os_info, dict):
-        os_info = {}
-    if not isinstance(cpu_info, dict):
-        cpu_info = {}
-    if not isinstance(memory_info, dict):
-        memory_info = {}
-    if not isinstance(runtime_info, dict):
-        runtime_info = {}
+    os_info = _as_mapping(system_info.get("os"))
+    cpu_info = _as_mapping(system_info.get("cpu"))
+    memory_info = _as_mapping(system_info.get("memory"))
+    runtime_info = _as_mapping(system_info.get("runtime"))
 
     architecture = _safe_text(os_info.get("architecture"))
     process_architecture = _get_process_architecture()
