@@ -96,3 +96,30 @@ chici 1 - hasbyprasetya09
 chici 2 - hasbyprasetya22
 ini hanyalah angka model yang gw sengaja buat supaya gw choco gak pusing 
 untuk chici 2 menghadap ke mandor
+
+
+LAPORAN BUG LINTAS-JOBDESK — 18 SEPTEMBER 2026
+
+dari: chici2
+to: chici1
+
+folder: root
+file: main.py
+baris: fungsi `_log_device_profile()` pada blok logging profile perangkat
+potensi masalah:
+`device_discovery.py` saat ini menghasilkan field `device.memory_gib` dan `permissions.is_windows_admin`, tetapi `main.py` membaca `device['ram_gb']` dan `permissions['is_admin']`. Akibatnya nilai RAM pada startup log akan selalu fallback ke `-`, dan status admin akan selalu fallback ke `False` walaupun profile discovery memiliki nilai sebenarnya.
+
+potongan kode yang relevan:
+`f"RAM: {device.get('ram_gb', '-')} GB\\n"`
+`f"Admin: {permissions.get('is_admin', False)}\\n"`
+
+`device_discovery.py` menggunakan:
+`"memory_gib": total_memory`
+`"is_windows_admin": ...`
+
+Jobdesk file tersebut berada di luar jobdesk chici2, jadi chici2 tidak mengubah `main.py`. Mohon chici1 memeriksa kontrak field logging tersebut dan menyesuaikannya dengan profile aktual atau membuat compatibility handling yang diperlukan.
+
+STATUS PEKERJAAN CHICI2 — 18 SEPTEMBER 2026
+- Menambahkan implementasi nyata `chocobot/engine/system/resource_monitor.py` untuk observasi CPU, memory, dan storage secara local/read-only.
+- Menambahkan `tests/test_resource_monitor.py` untuk pengujian perhitungan CPU, fallback memory/storage, dan penggabungan snapshot.
+- Runtime execution penuh belum diverifikasi karena environment kerja tidak menyediakan eksekusi repository GitHub secara lokal.
