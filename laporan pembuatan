@@ -1,6 +1,6 @@
 LAPORAN PEMBUATAN / HANDOFF
 
-Tanggal: 16 September 2026
+Tanggal: 18 September 2026
 Developer: Chici2
 Jobdesk: chocobot/engine, chocobot/docs, chocobot/data
 
@@ -8,36 +8,48 @@ PEMERIKSAAN KOORDINASI
 - File "absen harian" diperiksa sebelum bekerja.
 - File "diskusi" diperiksa sebelum bekerja.
 - File "catatan dari choco" diperiksa untuk arahan terbaru dan tidak diubah.
+- README.md, PERATURAN MUTLAK, struktur engine, file system yang relevan, dan commit terbaru diperiksa sebelum implementasi.
 
 STATUS PEKERJAAN
-1. Memeriksa README.md, riwayat commit terbaru, device_discovery.py, dan regression tests yang sudah ada.
-2. Menemukan celah hardening pada helper capability/recommendation ketika observasi nested seperti storage, runtime, GPU, atau memory memiliki tipe data malformed/non-dictionary.
-3. Memperbaiki chocobot/engine/system/device_discovery.py agar observasi nested dinormalisasi secara defensif sebelum diproses.
-4. Mencatat kehadiran Chici2 pada 16 September 2026 di file "absen harian".
+1. Mengonfirmasi bahwa Jumat, 18 September 2026 merupakan hari kerja Chici2 dan mencatat absensi pukul 09:15 WIB.
+2. Memeriksa current state device_discovery.py, tests/test_device_discovery.py, main.py, dan struktur chocobot/engine/system.
+3. Menemukan potensi bug lintas-jobdesk pada kontrak field logging antara main.py dan device_discovery.py; dilaporkan ke Chici1 melalui file "diskusi" tanpa mengubah main.py.
+4. Menemukan bahwa resource_monitor.py masih kosong walaupun roadmap README menempatkan resource monitoring sebagai engine inti yang belum diimplementasikan.
+5. Mengimplementasikan resource monitoring lokal yang read-only dengan standar library dan Windows-native ctypes.
+6. Menambahkan regression tests untuk resource monitoring.
 
 HASIL IMPLEMENTASI
-- Menambahkan helper internal _as_mapping() untuk memastikan nilai nested yang dipakai sebagai mapping benar-benar dictionary.
-- Memperkuat _build_capabilities() agar tidak crash ketika memory, storage, runtime, atau gpu malformed.
-- Memperkuat _build_recommendations() agar tetap menghasilkan rekomendasi ketika memory malformed.
-- Mempertahankan sifat read-only, local-first, tanpa dependency baru, tanpa elevation, tanpa instalasi, dan tanpa perubahan sistem pengguna.
-- Regression test yang sudah ada sekarang mencakup skenario observasi malformed pada beberapa bagian profile dan menjadi relevan terhadap hardening ini.
+- Mengisi `chocobot/engine/system/resource_monitor.py` dengan monitoring CPU, memory, dan storage.
+- CPU menggunakan sampling counter Windows `GetSystemTimes()` bila tersedia, dengan fallback `/proc/stat` pada lingkungan Linux-like.
+- Memory menggunakan Windows `GlobalMemoryStatusEx()` bila tersedia, dengan fallback `/proc/meminfo`.
+- Storage menggunakan `shutil.disk_usage()` tanpa dependency eksternal.
+- Menyediakan helper `get_cpu_usage_percent()`, `get_memory_usage()`, `get_storage_usage()`, dan agregasi `get_resource_snapshot()`.
+- Semua observasi bersifat read-only, tidak memodifikasi proses, file, konfigurasi, atau system settings.
+- Menambahkan `tests/test_resource_monitor.py` untuk CPU calculation, invalid interval, fallback memory/storage, storage normalization, dan snapshot aggregation.
+- Tidak menambah dependency baru.
 
 FILE TERKAIT
-- chocobot/engine/system/device_discovery.py
-- tests/test_device_discovery.py
+- chocobot/engine/system/resource_monitor.py
+- tests/test_resource_monitor.py
 - absen harian
+- diskusi
 - laporan pembuatan
 
 PENGUJIAN / VERIFIKASI
-- Inspeksi kontrak fungsi dan alur pemanggilan dilakukan terhadap implementasi terbaru.
-- Skenario malformed nested observation ditelusuri dan diperbaiki berdasarkan test yang sudah ada.
-- Runtime test penuh belum dapat diklaim karena environment kerja ini tidak menyediakan eksekusi repository GitHub secara lokal. Jangan menulis status "tested successfully" tanpa eksekusi runtime yang nyata.
+- Kontrak arsitektur dan file existing diperiksa sebelum implementasi.
+- Regression tests ditulis untuk normal path dan error/fallback path.
+- Runtime test penuh pada repository belum dapat diklaim karena environment kerja ini tidak menyediakan eksekusi checkout GitHub secara lokal.
+- Tidak menulis status "tested successfully" tanpa runtime execution nyata.
 
 RISIKO / BATASAN
-- Hardening ini mencegah crash akibat bentuk data nested yang tidak sesuai, tetapi tidak mengubah kualitas atau kelengkapan sumber observasi dari sysinfo.py.
-- Compatibility profile tetap bersifat best-effort dan informasional, bukan izin otomatis untuk instalasi atau modifikasi komponen.
+- Pengukuran CPU bersifat sampling dan menggunakan interval singkat; hasil tetap merupakan observasi waktu-ke-waktu, bukan benchmark.
+- Windows API dipanggil secara best-effort dan kegagalan API dikembalikan sebagai data unavailable, bukan exception yang menghentikan aplikasi.
+- Fallback `/proc` ditujukan agar modul tetap dapat diuji/digunakan pada lingkungan non-Windows, sedangkan target utama CG tetap Windows.
+- Integrasi UI atau startup consumer untuk menampilkan resource snapshot belum dilakukan dalam jobdesk ini dan tetap memerlukan perhatian developer yang menangani application/UI integration.
+- Bug kontrak field pada main.py sudah dilaporkan ke Chici1 dan tidak diperbaiki oleh Chici2 karena berada di luar jobdesk.
 
 STATUS
-IMPLEMENTED: defensive normalization untuk nested device discovery observations.
-PLANNED: component compatibility validation, component selection, safe degradation, dan installer/activation workflow yang mematuhi hasil discovery.
+IMPLEMENTED: lightweight local resource monitoring engine dan regression tests.
+IMPLEMENTED: laporan potensi mismatch field main.py versus device_discovery.py melalui diskusi lintas-jobdesk.
+PLANNED: integrasi resource snapshot ke consumer aplikasi/UI, adaptive resource policy yang lebih luas, dan component selection berbasis profil/resource nyata.
 PLACEHOLDER: tidak menambahkan placeholder yang diklaim sebagai fitur selesai.
