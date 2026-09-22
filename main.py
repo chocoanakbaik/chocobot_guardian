@@ -89,16 +89,28 @@ def _discover_device() -> dict:
         return {}
 
 
+def _as_mapping(value):
+    """Return a dictionary for profile sections, otherwise an empty mapping."""
+    return value if isinstance(value, dict) else {}
+
+
 def _log_device_profile(profile: dict) -> None:
     """Mencatat ringkasan profile perangkat tanpa menghentikan aplikasi."""
-    if not profile:
+    if not isinstance(profile, dict) or not profile:
         return
 
     try:
-        device = profile.get("device", {})
-        permissions = profile.get("permissions", {})
-        capabilities = profile.get("capabilities", {})
+        device = _as_mapping(profile.get("device"))
+        permissions = _as_mapping(profile.get("permissions"))
+        capabilities = _as_mapping(profile.get("capabilities"))
         recommendations = profile.get("recommendations", [])
+        if not isinstance(recommendations, list):
+            recommendations = []
+
+        memory_gib = device.get("memory_gib", "-")
+        admin_status = permissions.get("is_windows_admin")
+        if admin_status is None:
+            admin_status = "unknown"
 
         _append_log(
             "DEVICE DISCOVERY\n"
@@ -107,14 +119,14 @@ def _log_device_profile(profile: dict) -> None:
             f"OS version: {device.get('os_version', '-')}\n"
             f"Architecture: {device.get('architecture', '-')}\n"
             f"CPU: {device.get('cpu', '-')}\n"
-            f"RAM: {device.get('ram_gb', '-')} GB\n"
-            f"Admin: {permissions.get('is_admin', False)}\n"
+            f"RAM: {memory_gib} GiB\n"
+            f"Admin: {admin_status}\n"
             f"Capabilities: {capabilities}\n"
             f"Recommendations: {recommendations}\n"
             + "=" * 60
             + "\n"
         )
-    except (AttributeError, TypeError):
+    except (AttributeError, TypeError, ValueError):
         # Profile malformed; startup tetap berjalan tanpa memaksa struktur.
         _append_log(
             "DEVICE DISCOVERY\n"
