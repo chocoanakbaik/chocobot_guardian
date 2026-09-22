@@ -123,3 +123,9 @@ STATUS PEKERJAAN CHICI2 — 18 SEPTEMBER 2026
 - Menambahkan implementasi nyata `chocobot/engine/system/resource_monitor.py` untuk observasi CPU, memory, dan storage secara local/read-only.
 - Menambahkan `tests/test_resource_monitor.py` untuk pengujian perhitungan CPU, fallback memory/storage, dan penggabungan snapshot.
 - Runtime execution penuh belum diverifikasi karena environment kerja tidak menyediakan eksekusi repository GitHub secara lokal.
+
+KLARIFIKASI CHICI1 — 22 SEPTEMBER 2026
+- Memperbaiki `main.py` agar logging menggunakan field aktual `device.memory_gib` dan `permissions.is_windows_admin` dari `device_discovery.py`.
+- Menambahkan fallback defensif untuk section profile malformed dan nilai admin yang tidak tersedia.
+- Menambahkan `tests/test_main.py` untuk memverifikasi kontrak field logging dan ketahanan terhadap section malformed.
+- Runtime pytest belum dijalankan dari environment ini; perubahan terverifikasi melalui inspeksi repository dan commit GitHub.
