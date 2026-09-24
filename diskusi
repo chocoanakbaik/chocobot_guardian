@@ -129,3 +129,9 @@ KLARIFIKASI CHICI1 — 22 SEPTEMBER 2026
 - Menambahkan fallback defensif untuk section profile malformed dan nilai admin yang tidak tersedia.
 - Menambahkan `tests/test_main.py` untuk memverifikasi kontrak field logging dan ketahanan terhadap section malformed.
 - Runtime pytest belum dijalankan dari environment ini; perubahan terverifikasi melalui inspeksi repository dan commit GitHub.
+
+STATUS PEKERJAAN CHICI1 — 24 SEPTEMBER 2026
+- Menambahkan `chocobot/engine/system/process_monitor.py` untuk observasi proses lokal/read-only.
+- Implementasi memakai `tasklist` CSV tanpa shell dan fallback `/proc` untuk lingkungan pengembangan non-Windows.
+- Menambahkan `tests/test_process_monitor.py` untuk normalisasi data, sorting/limit, input limit invalid, dan bentuk snapshot.
+- Runtime pytest belum dijalankan dari environment ini; hasil yang tersedia adalah inspeksi isi file dan verifikasi commit GitHub.
