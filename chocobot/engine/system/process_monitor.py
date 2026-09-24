@@ -9,8 +9,9 @@ from __future__ import annotations
 import csv
 import io
 import os
+import re
 import subprocess
-from typing import Any, Dict, Iterable, List, Optional
+from typing import Any, Dict, List, Optional
 
 
 def _as_int(value: Any, default: int = 0) -> int:
@@ -18,6 +19,24 @@ def _as_int(value: Any, default: int = 0) -> int:
         return int(str(value).strip())
     except (TypeError, ValueError):
         return default
+
+
+def _parse_tasklist_memory(value: Any) -> int:
+    """Convert localized tasklist memory text into bytes safely.
+
+    Windows tasklist may emit values such as ``12,345 K``, ``12.345 KB``
+    or values with non-breaking spaces depending on the system locale.
+    The parser keeps only the numeric portion and treats the value as KiB,
+    matching the documented tasklist CSV output.
+    """
+    text = str(value or "").replace("\u00a0", " ").strip().upper()
+    if not text:
+        return 0
+
+    numeric = re.sub(r"[^0-9]", "", text)
+    if not numeric:
+        return 0
+    return max(0, _as_int(numeric) * 1024)
 
 
 def _normalize_process(name: Any, pid: Any, memory_bytes: Any = 0) -> Dict[str, Any]:
@@ -50,8 +69,13 @@ def _read_windows_processes() -> Optional[List[Dict[str, Any]]]:
     for row in csv.reader(io.StringIO(completed.stdout)):
         if len(row) < 5:
             continue
-        memory_text = row[4].replace(",", "").replace(" KB", "").strip()
-        processes.append(_normalize_process(row[0], row[1], _as_int(memory_text) * 1024))
+        processes.append(
+            _normalize_process(
+                row[0],
+                row[1],
+                _parse_tasklist_memory(row[4]),
+            )
+        )
     return processes
 
 
