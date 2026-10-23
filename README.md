@@ -4,6 +4,8 @@
 
 Chocobot Guardian (CG) is a desktop system utility project designed to help users inspect, monitor, diagnose, protect, and manage their computer through a lightweight local application.
 
+**Brand:** The Choco Studios (TCS). This project remains a separate product developed and maintained independently by Hasby Prasetya Saprudin as a solo developer. TCS is an umbrella branding identity, not a claim of formal corporate legal status.
+
 CG is built with a strong focus on:
 
 * Local-first operation
