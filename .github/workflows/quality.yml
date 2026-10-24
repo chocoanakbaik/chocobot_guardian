@@ -40,7 +40,7 @@ jobs:
           python-version: "3.12"
       - name: Install package dependencies
         run: python -m pip install -r requirements-dev.txt
-      - name: Build portable executable bundle
+      - name: Build GUI distribution
         shell: pwsh
         run: |
           pyinstaller --noconfirm --clean --windowed --name ChocobotGuardian `
@@ -48,12 +48,22 @@ jobs:
             --hidden-import PIL.ImageTk `
             main.py
           if (-not (Test-Path "dist/ChocobotGuardian/ChocobotGuardian.exe")) {
-            throw "Expected Windows executable was not built."
+            throw "Expected Windows GUI executable was not built."
+          }
+      - name: Build a console copy for deterministic smoke testing
+        shell: pwsh
+        run: |
+          pyinstaller --noconfirm --clean --name ChocobotGuardianSmokeTest `
+            --add-data "chocobot/data/language;chocobot/data/language" `
+            --hidden-import PIL.ImageTk `
+            main.py
+          if (-not (Test-Path "dist/ChocobotGuardianSmokeTest/ChocobotGuardianSmokeTest.exe")) {
+            throw "Expected console smoke-test executable was not built."
           }
       - name: Run packaged utility self-test
         shell: pwsh
         run: |
-          & "dist/ChocobotGuardian/ChocobotGuardian.exe" --self-test
+          & "dist/ChocobotGuardianSmokeTest/ChocobotGuardianSmokeTest.exe" --self-test
           if ($LASTEXITCODE -ne 0) {
             throw "Packaged self-test failed with exit code $LASTEXITCODE"
           }
