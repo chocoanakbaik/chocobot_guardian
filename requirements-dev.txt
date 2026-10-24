@@ -1,0 +1,4 @@
+# Development/test/build tools. Runtime users only need requirements.txt.
+-r requirements.txt
+pytest>=7.4,<9
+pyinstaller>=6.3,<7
