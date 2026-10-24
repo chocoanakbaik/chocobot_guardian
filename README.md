@@ -4,7 +4,7 @@
 
 Chocobot Guardian (CG) is a desktop system utility project designed to help users inspect, monitor, diagnose, protect, and manage their computer through a lightweight local application.
 
-**Brand:** The Choco Studios (TCS). This project remains a separate product developed and maintained independently by Hasby Prasetya Saprudin as a solo developer. TCS is an umbrella branding identity, not a claim of formal corporate legal status.
+**Parent organization:** The Choco Corporation. **Studio/creative brand:** The Choco Studios (TCS), operating under that umbrella identity. The software is independently developed by Hasby Prasetya Saprudin; these branding names do not by themselves assert legal incorporation.
 
 CG is built with a strong focus on:
 
@@ -25,14 +25,22 @@ CG is built with a strong focus on:
 
 ## Project Status
 
-**Current stage: Foundation / Active Development**
+**Current stage: working utility MVP / active development.** The existing dark desktop shell is connected to a first set of local utilities on the release branch. This does not mean every menu item in the planned platform is implemented.
 
-The repository currently contains the application foundation, user interface structure, configuration system, logging system, splash screen, and the planned modular engine architecture.
+### Functions implemented in the current branch
 
-Some engine modules are still under development and may currently contain placeholder or empty implementations.
+- **Link Inspector:** parses URL structure without opening the link; displays heuristic indicators for IP hosts, URL user-info, Punycode, shortening services, nonstandard ports, and other review signals.
+- **File Tools:** displays local file metadata and SHA-256 hash, plus a bounded folder inventory and list of largest files.
+- **Security file check:** read-only metadata and a few file-signature/extension heuristics. It is not an antivirus engine and cannot certify that a file is safe.
+- **Network diagnostics:** system DNS resolution, local hostname/address view, one ping attempt, and a single bounded TCP-port check.
+- **Device discovery and resource/process observations:** existing local read-only modules remain available as the foundation for device and monitor screens.
+- **Local data:** configuration, logs, generated icons, and quarantine/whitelist folders are separated from the app's bundled resources and stored in the user's application-data directory.
 
-The project is intentionally being developed in stages rather than pretending that unfinished features are already functional.
+### Not included in this MVP
 
+Automatic malware blocking, real-time protection, automatic quarantine, verified malware signatures, online reputation feeds, deep PDF/Word conversion, broad file recovery, mass port scanning, or remote administration are not provided by the implemented utilities. Some UI areas remain planned or incomplete. Do not advertise the application as a finished antivirus or full system-protection suite.
+
+See the internal [release checklist](docs/RELEASE_CHECKLIST.md) and [draft product listing](docs/PRODUCT_LISTING_PROJECTS_CO_ID.md) before preparing a commercial release.
 ---
 
 ## Core Direction
