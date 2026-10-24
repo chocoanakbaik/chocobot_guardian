@@ -255,7 +255,7 @@ SHADOW_SOFT = "#06090c"
 # Tkinter paling aman menggunakan tuple untuk font configuration.
 # Namun string lama tetap dipertahankan untuk compatibility.
 
-FONT_FAMILY = "Segoe UI"
+FONT_FAMILY = "Arial"  # Avoid Tk font-descriptor parsing failures on older Windows/Tcl builds.
 
 FONT_FAMILY_FALLBACK = "Arial"
 
@@ -1459,10 +1459,139 @@ DESIGN_TOKENS = {
 
 
 # ============================================================================
+# Compatibility tokens used by the reusable widget layer.
+#
+# Older widget classes evolved against a broader token set than this theme
+# exported. These aliases map that interface to the current palette and sizing
+# tokens, so importing the widget module remains safe.
+# ============================================================================
+
+EASING_LINEAR = "linear"
+EASING_EASE_IN = "ease_in"
+EASING_EASE_OUT = "ease_out"
+EASING_EASE_IN_OUT = "ease_in_out"
+EASING_CUBIC = "cubic"
+DEFAULT_EASING = EASING_CUBIC
+HOVER_EASING = EASING_EASE_OUT
+
+ANIMATIONS_ENABLED = True
+ANIMATION_QUICK_MS = 120
+ANIMATION_NORMAL_MS = 180
+
+CONTENT_BG = APP_BG_2
+PANEL_SOFT = PANEL_DARK
+PANEL_ELEVATED = PANEL_3
+CARD_BG = PANEL
+CARD_BG_HOVER = PANEL_2
+BUTTON_BG = PANEL_2
+BORDER_HOVER = BORDER_ACTIVE
+
+NAV_BG = SIDEBAR_BG
+NAV_ICON = TEXT_TERTIARY
+NAV_ICON_ACTIVE = CYAN
+NAV_ICON_HOVER = CYAN_SOFT
+NAV_TEXT = TEXT_SECONDARY
+NAV_TEXT_ACTIVE = TEXT_PRIMARY
+NAV_TEXT_HOVER = TEXT_PRIMARY
+NAV_ITEM_HEIGHT = SIDEBAR_ITEM_HEIGHT
+NAV_INDICATOR_WIDTH = SIDEBAR_ACTIVE_BAR_WIDTH
+
+BUTTON_HEIGHT_SMALL = BUTTON_SMALL_HEIGHT
+ELEMENT_GAP = 8
+PROGRESS_BG = BORDER
+PROGRESS_HEIGHT = 8
+TOGGLE_WIDTH = 48
+TOGGLE_HEIGHT = 26
+TOGGLE_KNOB_SIZE = 18
+TOGGLE_BG_OFF = PANEL_3
+TOGGLE_BG_ON = CYAN_DIM
+TOGGLE_KNOB = TEXT_PRIMARY
+TOGGLE_ANIMATION_STEPS = HOVER_TRANSITION_STEPS
+
+SCROLLBAR_BG = PANEL_DARK
+SCROLLBAR_TRACK = PANEL_DARK
+SCROLLBAR_THUMB_HOVER = CYAN_DIM
+SHADOW_ENABLED = True
+
+FONT_DISPLAY = FONT_HERO
+FONT_DISPLAY_SMALL = FONT_TITLE
+FONT_CARD_DESC_SMALL = FONT_CARD_SMALL
+FONT_MICRO = ("Segoe UI", 7)
+FONT_MICRO_BOLD = ("Segoe UI", 7, "bold")
+FONT_MONO_LARGE = ("Consolas", 12)
+FONT_SIDEBAR_ITEM_BOLD = FONT_SIDEBAR_ITEM_ACTIVE
+FONT_STATUS_VALUE_LARGE = FONT_STATUS_VALUE
+TOOLTIP_FONT = FONT_LABEL
+
+NOTIFICATION_DURATION_MS = 4000
+TOOLTIP_DURATION_MS = 3000
+SPLASH_PULSE_MS = 220
+STATUS_READY = "SIAP"
+STATUS_PROTECTED = "PEMERIKSAAN LOKAL AKTIF"
+
+
+# ============================================================================
 # 45. END OF DESIGN SYSTEM
 # ============================================================================
 
 __all__ = [
+    # Compatibility tokens used by reusable widgets
+    "EASING_LINEAR",
+    "EASING_EASE_IN",
+    "EASING_EASE_OUT",
+    "EASING_EASE_IN_OUT",
+    "EASING_CUBIC",
+    "DEFAULT_EASING",
+    "HOVER_EASING",
+    "ANIMATIONS_ENABLED",
+    "ANIMATION_QUICK_MS",
+    "ANIMATION_NORMAL_MS",
+    "CONTENT_BG",
+    "PANEL_SOFT",
+    "PANEL_ELEVATED",
+    "CARD_BG",
+    "CARD_BG_HOVER",
+    "BUTTON_BG",
+    "BORDER_HOVER",
+    "NAV_BG",
+    "NAV_ICON",
+    "NAV_ICON_ACTIVE",
+    "NAV_ICON_HOVER",
+    "NAV_TEXT",
+    "NAV_TEXT_ACTIVE",
+    "NAV_TEXT_HOVER",
+    "NAV_ITEM_HEIGHT",
+    "NAV_INDICATOR_WIDTH",
+    "BUTTON_HEIGHT_SMALL",
+    "ELEMENT_GAP",
+    "PROGRESS_BG",
+    "PROGRESS_HEIGHT",
+    "TOGGLE_WIDTH",
+    "TOGGLE_HEIGHT",
+    "TOGGLE_KNOB_SIZE",
+    "TOGGLE_BG_OFF",
+    "TOGGLE_BG_ON",
+    "TOGGLE_KNOB",
+    "TOGGLE_ANIMATION_STEPS",
+    "SCROLLBAR_BG",
+    "SCROLLBAR_TRACK",
+    "SCROLLBAR_THUMB_HOVER",
+    "SHADOW_ENABLED",
+    "FONT_DISPLAY",
+    "FONT_DISPLAY_SMALL",
+    "FONT_CARD_DESC_SMALL",
+    "FONT_MICRO",
+    "FONT_MICRO_BOLD",
+    "FONT_MONO_LARGE",
+    "FONT_SIDEBAR_ITEM_BOLD",
+    "FONT_STATUS_VALUE_LARGE",
+    "TOOLTIP_FONT",
+    "NOTIFICATION_DURATION_MS",
+    "TOOLTIP_DURATION_MS",
+    "SPLASH_PULSE_MS",
+    "STATUS_READY",
+    "STATUS_PROTECTED",
+
     # Core colors
     "APP_BG",
     "APP_BG_2",

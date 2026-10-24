@@ -1,0 +1,71 @@
+name: Chocobot Guardian quality and Windows package smoke test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    name: Tests (${{ matrix.os }}, Python ${{ matrix.python-version }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest]
+        python-version: ["3.10", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install test dependencies
+        run: python -m pip install -r requirements-dev.txt
+      - name: Compile source and tests
+        run: python -m compileall -q main.py chocobot tests
+      - name: Run tests
+        run: python -m pytest -q
+
+  windows-package-smoke:
+    name: Build and smoke-test Windows executable
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install package dependencies
+        run: python -m pip install -r requirements-dev.txt
+      - name: Build GUI distribution
+        shell: pwsh
+        run: |
+          pyinstaller --noconfirm --clean --windowed --name ChocobotGuardian `
+            --add-data "assets;assets" `
+            --add-data "assets;assets" `
+            --add-data "chocobot/data/language;chocobot/data/language" `
+            --hidden-import PIL.ImageTk `
+            main.py
+          if (-not (Test-Path "dist/ChocobotGuardian/ChocobotGuardian.exe")) {
+            throw "Expected Windows GUI executable was not built."
+          }
+      - name: Build a console copy for deterministic smoke testing
+        shell: pwsh
+        run: |
+          pyinstaller --noconfirm --clean --name ChocobotGuardianSmokeTest `
+            --add-data "chocobot/data/language;chocobot/data/language" `
+            --hidden-import PIL.ImageTk `
+            main.py
+          if (-not (Test-Path "dist/ChocobotGuardianSmokeTest/ChocobotGuardianSmokeTest.exe")) {
+            throw "Expected console smoke-test executable was not built."
+          }
+      - name: Run packaged utility self-test
+        shell: pwsh
+        run: |
+          & "dist/ChocobotGuardianSmokeTest/ChocobotGuardianSmokeTest.exe" --self-test
+          if ($LASTEXITCODE -ne 0) {
+            throw "Packaged self-test failed with exit code $LASTEXITCODE"
+          }

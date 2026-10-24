@@ -57,7 +57,8 @@ def _ensure_data_dir() -> None:
     const.LOG_DIR.mkdir(parents=True, exist_ok=True)
     const.QUARANTINE_DIR.mkdir(parents=True, exist_ok=True)
     const.WHITELIST_DIR.mkdir(parents=True, exist_ok=True)
-    const.LANGUAGE_DIR.mkdir(parents=True, exist_ok=True)
+    const.ICONS_DIR.mkdir(parents=True, exist_ok=True)
+    # LANGUAGE_DIR contains bundled read-only language packs.
 
 
 def load_config() -> Dict[str, Any]:

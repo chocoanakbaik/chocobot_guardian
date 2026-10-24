@@ -23,6 +23,7 @@ import json
 import sys
 import webbrowser
 import tkinter as tk
+from tkinter import filedialog, messagebox
 from datetime import datetime
 from pathlib import Path
 
@@ -144,9 +145,9 @@ class ChocobotApp:
             "result_area": "Area hasil",
 
             "system_status": "STATUS SISTEM",
-            "protected": "Terlindungi",
+            "protected": "Pemeriksaan lokal aktif",
             "interface_ready":
-                "Antarmuka siap • Mode local-first",
+                "Utilitas berjalan lokal • beberapa modul masih tahap awal",
 
             "chocobot_title": "Chocobot",
             "chocobot_subtitle":
@@ -206,21 +207,16 @@ class ChocobotApp:
             "open_license": "Buka Halaman Lisensi",
         }
 
+        # Language packs are bundled read-only resources.
         lang_file = const.LANGUAGE_DIR / f"{lang}.json"
-
-        if lang_file.exists():
+        if lang_file.is_file():
             try:
-                with open(
-                    lang_file,
-                    "r",
-                    encoding="utf-8",
-                ) as file:
+                with open(lang_file, "r", encoding="utf-8") as file:
                     data = json.load(file)
-
                 if isinstance(data, dict):
                     default_texts.update(data)
-
-            except Exception:
+            except (OSError, json.JSONDecodeError, TypeError):
+                # Keep defaults if an optional language pack is invalid.
                 pass
 
         return default_texts
@@ -378,18 +374,23 @@ class ChocobotApp:
         self._load_sidebar_logo()
 
         if self._logo_img is not None:
-            self.logo_label = tk.Label(
-                self.brand,
-                image=self._logo_img,
-                bg=styles.SIDEBAR_BG,
-                bd=0,
-            )
-
-            self.logo_label.pack(
-                side="left",
-                padx=(18, 10),
-                pady=15,
-            )
+            try:
+                self.logo_label = tk.Label(
+                    self.brand,
+                    image=self._logo_img,
+                    bg=styles.SIDEBAR_BG,
+                    bd=0,
+                )
+                self.logo_label.pack(
+                    side="left",
+                    padx=(18, 10),
+                    pady=15,
+                )
+            except tk.TclError:
+                # The optional brand image must never prevent startup. The
+                # text wordmark below remains available as a safe fallback.
+                self.logo_label = None
+                self._logo_img = None
 
         brand_text = tk.Frame(
             self.brand,
@@ -1601,311 +1602,209 @@ class ChocobotApp:
         self,
         parent: tk.Frame,
     ) -> None:
-        """Security center interface."""
-
+        """Local read-only file inspection; this is not an antivirus scanner."""
         self._page_title(
             parent,
-            "Security Center",
-            "Security tools and protection interface",
+            "Pusat Pemeriksaan File",
+            "Pemeriksaan lokal berbasis metadata dan signature terbatas. Tidak menghapus atau mengarantina file.",
         )
-
-        f = tk.Frame(
-            parent,
-            bg=styles.APP_BG,
+        panel = tk.Frame(parent, bg=styles.PANEL, highlightthickness=1, highlightbackground=styles.BORDER)
+        panel.pack(fill="both", expand=True, pady=(0, 12))
+        tk.Label(
+            panel,
+            text="Pilih file untuk memeriksa hash SHA-256, ekstensi, signature umum, dan indikator sederhana.",
+            bg=styles.PANEL, fg=styles.TEXT, font=styles.FONT_SUBTITLE, wraplength=780, justify="left",
+        ).pack(anchor="w", padx=18, pady=(18, 10))
+        output = tk.Text(
+            panel, height=18, wrap="word", bg=styles.ENTRY_BG, fg=styles.TEXT,
+            insertbackground=styles.CYAN, relief="flat", font=("Consolas", 10),
         )
+        output.pack(fill="both", expand=True, padx=18, pady=(0, 16))
+        output.insert("1.0", "Pemeriksaan ini bersifat read-only dan tidak membuktikan file aman.\n")
+        output.configure(state="disabled")
 
-        f.pack(
-            fill="both",
-            expand=True,
-        )
+        def inspect_selected() -> None:
+            selected = filedialog.askopenfilename(parent=parent, title="Pilih file untuk diperiksa")
+            if not selected:
+                return
+            try:
+                from chocobot.engine.security.file_analyzer import analyze_file
+                result = analyze_file(selected)
+                info = result["file"]
+                lines = [
+                    "HASIL PEMERIKSAAN LOKAL",
+                    "=" * 42,
+                    f"Nama: {info['name']}",
+                    f"Lokasi: {info['full_path']}",
+                    f"Ukuran: {info['size_bytes']:,} byte",
+                    f"Tipe: {info['mime_type']}",
+                    f"Perhatian: {result['overall_attention']}",
+                    f"SHA-256: {result['sha256']}",
+                    "",
+                    "INDIKATOR",
+                ]
+                if result["notes"]:
+                    for note in result["notes"]:
+                        lines.append(f"[{note['attention']}] {note['detail']}")
+                else:
+                    lines.append("Tidak ada indikator yang cocok dengan aturan sederhana.")
+                lines.extend(["", result["notice"]])
+                output.configure(state="normal")
+                output.delete("1.0", "end")
+                output.insert("1.0", "\n".join(lines))
+                output.configure(state="disabled")
+            except (OSError, ValueError) as exc:
+                messagebox.showerror("Pemeriksaan gagal", f"File tidak dapat diperiksa: {exc}", parent=parent)
 
-        items = [
-            (
-                "Quick Scan",
-                "Start a standard security scan workflow",
-                styles.RED,
-            ),
-            (
-                "Custom Scan",
-                "Choose scan scope and options",
-                styles.MAGENTA,
-            ),
-            (
-                "File Analysis",
-                "Inspect a selected file",
-                styles.PURPLE,
-            ),
-            (
-                "Quarantine",
-                "View isolated suspicious files",
-                styles.YELLOW,
-            ),
-            (
-                "Whitelist",
-                "Manage trusted items",
-                styles.GREEN,
-            ),
-            (
-                "Security Report",
-                "View analysis summaries and results",
-                styles.CYAN,
-            ),
-        ]
-
-        self._card_grid(
-            f,
-            items,
-            "security",
-            columns=2,
-        )
-
-    # ==================================================================
-    # LINK INSPECTOR
-    # ==================================================================
+        tk.Button(
+            panel, text="Pilih file dan periksa", command=inspect_selected,
+            bg=styles.CYAN, fg="#071014", activebackground=styles.CYAN,
+            relief="flat", padx=14, pady=8, cursor="hand2",
+        ).pack(anchor="w", padx=18, pady=(0, 18))
 
     def page_link(
         self,
         parent: tk.Frame,
     ) -> None:
-        """Link inspector."""
-
+        """Offline URL structure and heuristic indicator inspection."""
         self._page_title(
             parent,
-            "Link Inspector",
-            "Detailed URL analysis interface",
+            "Inspektur Tautan",
+            "Pemeriksaan struktur URL secara lokal. Tidak membuka tautan atau menghubungi domain.",
         )
-
-        box = tk.Frame(
-            parent,
-            bg=styles.PANEL,
-            highlightthickness=1,
-            highlightbackground=styles.BORDER,
+        box = tk.Frame(parent, bg=styles.PANEL, highlightthickness=1, highlightbackground=styles.BORDER)
+        box.pack(fill="x", pady=(0, 12))
+        tk.Label(box, text="URL / Tautan", fg=styles.MUTED, bg=styles.PANEL, font=styles.FONT_SUBTITLE).pack(
+            anchor="w", padx=18, pady=(16, 6)
         )
-
-        box.pack(
-            fill="x",
-            pady=(0, 14),
-        )
-
-        tk.Label(
-            box,
-            text=self.t("url_label"),
-            fg=styles.MUTED,
-            bg=styles.PANEL,
-            font=styles.FONT_SUBTITLE,
-        ).pack(
-            anchor="w",
-            padx=18,
-            pady=(16, 6),
-        )
-
-        entry_frame = tk.Frame(
-            box,
-            bg=styles.ENTRY_BG,
-            highlightthickness=1,
-            highlightbackground=styles.BORDER,
-        )
-
-        entry_frame.pack(
-            fill="x",
-            padx=18,
-        )
-
         entry = tk.Entry(
-            entry_frame,
-            bg=styles.ENTRY_BG,
-            fg=styles.TEXT,
-            insertbackground=styles.CYAN,
-            selectbackground=styles.CYAN,
-            selectforeground="#071014",
-            relief="flat",
-            bd=0,
-            font=styles.FONT_ENTRY,
+            box, bg=styles.ENTRY_BG, fg=styles.TEXT, insertbackground=styles.CYAN,
+            relief="flat", bd=0, font=styles.FONT_ENTRY,
         )
-
-        entry.pack(
-            fill="x",
-            ipady=10,
-            padx=10,
+        entry.pack(fill="x", padx=18, ipady=10)
+        entry.insert(0, "https://example.com/path?query=value")
+        result = tk.Text(
+            parent, wrap="word", bg=styles.PANEL, fg=styles.TEXT,
+            insertbackground=styles.CYAN, relief="flat", font=("Consolas", 10), height=18,
         )
+        result.pack(fill="both", expand=True, pady=(0, 8))
 
-        entry.insert(
-            0,
-            "https://example.com/path?query=value",
-        )
-
-        def analyze():
-            self.link_result.configure(
-                text=(
-                    "Analysis placeholder — "
-                    "backend will be connected later"
-                ),
-                fg=styles.CYAN,
-            )
+        def analyze() -> None:
+            try:
+                from chocobot.engine.link.inspector import inspect_url
+                report = inspect_url(entry.get())
+                lines = ["HASIL PEMERIKSAAN URL", "=" * 42]
+                if not report.get("valid"):
+                    lines.append(report.get("error", "URL tidak valid."))
+                else:
+                    lines.extend([
+                        f"URL: {report['normalized_url']}",
+                        f"Host: {report['host']}",
+                        f"Skema: {report['scheme']}",
+                        f"Port: {report['port']}",
+                        f"Path: {report['path']}",
+                        f"HTTPS: {'Ya' if report['https'] else 'Tidak'}",
+                        f"Skor indikator: {report['score']}/100 ({report['level']})",
+                        "",
+                        "INDIKATOR YANG PERLU DITINJAU",
+                    ])
+                    if report["indicators"]:
+                        for item in report["indicators"]:
+                            lines.append(f"[+{item['points']}] {item['title']}: {item['detail']}")
+                    else:
+                        lines.append("Tidak ada indikator yang cocok dengan aturan sederhana.")
+                    lines.extend(["", report["notice"]])
+                result.delete("1.0", "end")
+                result.insert("1.0", "\n".join(lines))
+            except Exception as exc:
+                result.delete("1.0", "end")
+                result.insert("1.0", f"Pemeriksaan gagal: {type(exc).__name__}: {exc}")
 
         RoundedButton(
-            box,
-            text=self.t("analyze"),
-            command=analyze,
-            width=130,
-            height=34,
-            bg=styles.CYAN,
-            fg="#071014",
-        ).pack(
-            anchor="w",
-            padx=18,
-            pady=12,
-        )
-
-        self.link_result = tk.Label(
-            parent,
-            text=self.t("result_area"),
-            fg=styles.MUTED,
-            bg=styles.APP_BG,
-            font=styles.FONT_SUBTITLE,
-        )
-
-        self.link_result.pack(
-            anchor="w",
-            pady=(5, 8),
-        )
-
-        r = tk.Frame(
-            parent,
-            bg=styles.APP_BG,
-        )
-
-        r.pack(
-            fill="both",
-            expand=True,
-        )
-
-        cards = [
-            (
-                "URL Structure",
-                "Protocol, domain, subdomain, port, "
-                "path, query and fragment",
-                styles.CYAN,
-            ),
-            (
-                "Suspicious Patterns",
-                "Pattern indicators and brand "
-                "impersonation indicators",
-                styles.RED,
-            ),
-            (
-                "Risk Score",
-                "Score range, Risk Level "
-                "and explanation",
-                styles.YELLOW,
-            ),
-        ]
-
-        for i, (
-            title,
-            description,
-            accent,
-        ) in enumerate(cards):
-
-            r.grid_columnconfigure(
-                i,
-                weight=1,
-                uniform="link",
-            )
-
-            wrapper = self._create_card_wrapper(
-                r,
-                title=title,
-                text=description,
-                accent=accent,
-                command=None,
-                width=300,
-                height=115,
-            )
-
-            wrapper.grid(
-                row=0,
-                column=i,
-                sticky="nsew",
-                padx=(
-                    (0, 7)
-                    if i == 0
-                    else (
-                        7 if i == 1
-                        else (7, 0)
-                    )
-                ),
-            )
-
-    # ==================================================================
-    # FILE TOOLS
-    # ==================================================================
+            box, text="Analisis", command=analyze, width=130, height=34,
+            bg=styles.CYAN, fg="#071014",
+        ).pack(anchor="w", padx=18, pady=12)
+        analyze()
 
     def page_files(
         self,
         parent: tk.Frame,
     ) -> None:
-        """File utility interface."""
-
+        """Working local file metadata, hashing, and folder inventory."""
         self._page_title(
             parent,
-            "File Tools",
-            "File and folder utility interface",
+            "Utilitas File",
+            "Informasi file, SHA-256, dan ringkasan folder. Semua pemeriksaan bersifat lokal dan read-only.",
         )
-
-        f = tk.Frame(
-            parent,
-            bg=styles.APP_BG,
+        toolbar = tk.Frame(parent, bg=styles.APP_BG)
+        toolbar.pack(fill="x", pady=(0, 12))
+        output = tk.Text(
+            parent, wrap="word", bg=styles.PANEL, fg=styles.TEXT,
+            insertbackground=styles.CYAN, relief="flat", font=("Consolas", 10),
         )
+        output.pack(fill="both", expand=True)
 
-        f.pack(
-            fill="both",
-            expand=True,
-        )
+        def show_text(text: str) -> None:
+            output.delete("1.0", "end")
+            output.insert("1.0", text)
 
-        items = [
-            (
-                "File Information",
-                "Name, size, format, location and date",
-                styles.CYAN,
-            ),
-            (
-                "File Analysis",
-                "Analysis result and file metadata",
-                styles.PURPLE,
-            ),
-            (
-                "Folder Analysis",
-                "Inspect folder contents",
-                styles.MAGENTA,
-            ),
-            (
-                "File Search",
-                "Find files by selected criteria",
-                styles.GREEN,
-            ),
-            (
-                "Hash / SHA-256",
-                "Hash generation and verification",
-                styles.YELLOW,
-            ),
-            (
-                "Large File Check",
-                "Identify large files",
-                styles.RED,
-            ),
-        ]
+        def inspect_file() -> None:
+            selected = filedialog.askopenfilename(parent=parent, title="Pilih file")
+            if not selected:
+                return
+            try:
+                from chocobot.engine.file_tools.file_info import get_file_info
+                from chocobot.engine.file_tools.hashing import hash_file
+                info = get_file_info(selected)
+                hashes = hash_file(selected, ("sha256",))
+                size = info["size_bytes"]
+                show_text(
+                    "INFORMASI FILE\n" + "=" * 42 + "\n"
+                    + f"Nama: {info['name']}\nLokasi: {info['full_path']}\n"
+                    + f"Ekstensi: {info['extension'] or '[tanpa ekstensi]'}\n"
+                    + f"Tipe MIME: {info['mime_type']}\nUkuran: {size:,} byte ({size / (1024 * 1024):.2f} MiB)\n"
+                    + f"Dianggap tersembunyi: {info['is_hidden']}\n"
+                    + f"SHA-256: {hashes['sha256']}\n\n"
+                    + "Hash cocok untuk memverifikasi bahwa byte file tidak berubah. Hash bukan bukti file aman."
+                )
+            except (OSError, ValueError) as exc:
+                messagebox.showerror("File tidak dapat diperiksa", str(exc), parent=parent)
 
-        self._card_grid(
-            f,
-            items,
-            "files",
-            columns=2,
-        )
+        def inspect_folder() -> None:
+            selected = filedialog.askdirectory(parent=parent, title="Pilih folder")
+            if not selected:
+                return
+            try:
+                from chocobot.engine.file_tools.folder_analysis import analyze_folder
+                report = analyze_folder(selected)
+                lines = [
+                    "RINGKASAN FOLDER", "=" * 42, f"Folder: {report['root']}",
+                    f"File ditemukan: {report['files_count']}",
+                    f"Subfolder ditemukan: {report['directories_count']}",
+                    f"Ukuran total yang dihitung: {report['total_bytes']:,} byte",
+                    f"File tak bisa diakses: {report['inaccessible_count']}",
+                    f"Hasil dibatasi: {'Ya' if report['truncated'] else 'Tidak'}",
+                    "", "EKSTENSI",
+                ]
+                lines.extend(f"{ext}: {count}" for ext, count in report["extension_counts"].items())
+                lines.extend(["", "10 FILE TERBESAR"])
+                lines.extend(f"{row['size_bytes']:>12,} byte  {row['name']}" for row in report["largest_files"])
+                lines.extend(["", "Ringkasan bersifat read-only; tautan simbolik dilewati."])
+                show_text("\n".join(lines))
+            except (OSError, ValueError) as exc:
+                messagebox.showerror("Folder tidak dapat dianalisis", str(exc), parent=parent)
 
-    # ==================================================================
-    # CONVERTER
-    # ==================================================================
+        for label, command in (
+            ("Informasi file + SHA-256", inspect_file),
+            ("Ringkasan folder", inspect_folder),
+        ):
+            tk.Button(
+                toolbar, text=label, command=command,
+                bg=styles.CYAN if label.startswith("Informasi") else styles.PANEL,
+                fg="#071014" if label.startswith("Informasi") else styles.TEXT,
+                relief="flat", padx=12, pady=8, cursor="hand2",
+            ).pack(side="left", padx=(0, 8))
+        show_text("Pilih salah satu utilitas di atas.\nFolder scan membatasi penelusuran hingga 10.000 file secara default.")
 
     def page_converter(
         self,
@@ -2120,116 +2019,279 @@ class ChocobotApp:
         self,
         parent: tk.Frame,
     ) -> None:
-        """System page."""
-
-        self._simple_info(
+        """Show a real, read-only device and operating-system snapshot."""
+        self._page_title(
             parent,
-            "System",
-            "Windows version, architecture, CPU, RAM, "
-            "storage and device information",
-            [
-                (
-                    "Windows",
-                    "Operating system details",
-                ),
-                (
-                    "Architecture",
-                    "System architecture",
-                ),
-                (
-                    "CPU",
-                    "Processor information",
-                ),
-                (
-                    "RAM",
-                    "Memory information",
-                ),
-                (
-                    "Storage",
-                    "Storage overview",
-                ),
-            ],
+            "Informasi Perangkat",
+            "Informasi OS, runtime, CPU, memori, GPU, dan penyimpanan yang terbaca secara lokal.",
         )
+        toolbar = tk.Frame(parent, bg=styles.APP_BG)
+        toolbar.pack(fill="x", pady=(0, 12))
+        output = tk.Text(
+            parent, wrap="word", bg=styles.PANEL, fg=styles.TEXT,
+            insertbackground=styles.CYAN, relief="flat", font=("Consolas", 10),
+        )
+        output.pack(fill="both", expand=True)
 
-    # ==================================================================
-    # NETWORK
-    # ==================================================================
+        def show_text(value: str) -> None:
+            output.configure(state="normal")
+            output.delete("1.0", "end")
+            output.insert("1.0", value)
+            output.configure(state="disabled")
+
+        def refresh() -> None:
+            try:
+                from chocobot.engine.system.sysinfo import get_system_info
+                from chocobot.engine.system.device_discovery import discover_device
+                info = get_system_info()
+                profile = discover_device()
+                os_info = info.get("os", {})
+                runtime = info.get("runtime", {})
+                cpu = info.get("cpu", {})
+                memory = info.get("memory", {})
+                gpu = info.get("gpu", {})
+                storage = info.get("storage", {})
+                device = profile.get("device", {})
+                capabilities = profile.get("capabilities", {})
+                lines = [
+                    "INFORMASI PERANGKAT",
+                    "=" * 48,
+                    f"Sistem operasi: {os_info.get('name', '-') } {os_info.get('release', '')}",
+                    f"Versi/build OS: {os_info.get('version', '-')}",
+                    f"Arsitektur: {os_info.get('architecture', '-')}",
+                    f"Nama perangkat: {os_info.get('hostname', '-')}",
+                    f"Python/runtime: {runtime.get('implementation', '-')} {runtime.get('version', '-')}",
+                    "",
+                    "PROSESOR",
+                    f"Model: {cpu.get('name', '-')}",
+                    f"Arsitektur CPU: {cpu.get('architecture', '-')}",
+                    f"Prosesor logis: {cpu.get('logical_processors', 0)}",
+                    "",
+                    "MEMORI",
+                    f"RAM total: {memory.get('total_gib', 0)} GiB",
+                    f"RAM terpakai: {memory.get('used_gib', 0)} GiB ({memory.get('used_percent', 0)}%)",
+                    f"RAM tersedia: {memory.get('available_gib', 0)} GiB",
+                    "",
+                    "GRAFIS",
+                    *([f"- {item}" for item in gpu.get("adapters", [])] or ["GPU/display adapter tidak tersedia melalui metode standar."]),
+                    "",
+                    "PENYIMPANAN",
+                    f"Lokasi: {storage.get('path', '-')}",
+                    f"Total: {storage.get('total_gib', 0)} GiB",
+                    f"Terpakai: {storage.get('used_gib', 0)} GiB ({storage.get('used_percent', 0)}%)",
+                    f"Kosong: {storage.get('free_gib', 0)} GiB",
+                    "",
+                    f"Profil memori: {device.get('memory_tier', 'unknown')}",
+                    f"Python runtime tersedia: {capabilities.get('python_runtime', False)}",
+                    f"Folder kerja writable: {capabilities.get('writable_working_directory', False)}",
+                    "",
+                    "Data hanya dibaca secara lokal. Deteksi bukan jaminan kompatibilitas setiap fitur atau versi Windows.",
+                ]
+                show_text("\n".join(str(line) for line in lines))
+            except Exception as exc:
+                show_text(f"Snapshot gagal dibaca: {type(exc).__name__}: {exc}")
+
+        tk.Button(
+            toolbar, text="Perbarui informasi", command=refresh,
+            bg=styles.CYAN, fg="#071014", relief="flat", padx=14, pady=8, cursor="hand2",
+        ).pack(side="left")
+        refresh()
 
     def page_network(
         self,
         parent: tk.Frame,
     ) -> None:
-        """Network page."""
-
-        self._simple_info(
+        """Interactive DNS, local-address, ping and TCP diagnostics."""
+        self._page_title(
             parent,
-            "Network",
-            "Basic network diagnostics and inspection",
-            [
-                (
-                    "IP Information",
-                    "IP details",
-                ),
-                (
-                    "DNS Lookup",
-                    "DNS query interface",
-                ),
-                (
-                    "Ping",
-                    "Connectivity test interface",
-                ),
-                (
-                    "Connection Information",
-                    "Current connection view",
-                ),
-                (
-                    "Port Inspection",
-                    "Basic port inspection",
-                ),
-            ],
+            "Diagnostik Jaringan",
+            "Utilitas diagnostik dasar. Tes koneksi menghubungi host/port yang lu masukkan; tidak memindai jaringan secara massal.",
         )
+        controls = tk.Frame(parent, bg=styles.PANEL, highlightthickness=1, highlightbackground=styles.BORDER)
+        controls.pack(fill="x", pady=(0, 12))
+        tk.Label(controls, text="Host atau alamat IP", bg=styles.PANEL, fg=styles.MUTED).grid(
+            row=0, column=0, sticky="w", padx=14, pady=(14, 4)
+        )
+        host_entry = tk.Entry(
+            controls, bg=styles.ENTRY_BG, fg=styles.TEXT, insertbackground=styles.CYAN,
+            relief="flat", font=styles.FONT_ENTRY,
+        )
+        host_entry.insert(0, "localhost")
+        host_entry.grid(row=1, column=0, sticky="ew", padx=14, pady=(0, 12), ipady=7)
+        tk.Label(controls, text="Port TCP (untuk tes port)", bg=styles.PANEL, fg=styles.MUTED).grid(
+            row=0, column=1, sticky="w", padx=14, pady=(14, 4)
+        )
+        port_entry = tk.Entry(
+            controls, width=10, bg=styles.ENTRY_BG, fg=styles.TEXT, insertbackground=styles.CYAN,
+            relief="flat", font=styles.FONT_ENTRY,
+        )
+        port_entry.insert(0, "443")
+        port_entry.grid(row=1, column=1, sticky="ew", padx=14, pady=(0, 12), ipady=7)
+        controls.columnconfigure(0, weight=1)
 
-    # ==================================================================
-    # MONITOR
-    # ==================================================================
+        output = tk.Text(
+            parent, wrap="word", bg=styles.PANEL, fg=styles.TEXT,
+            insertbackground=styles.CYAN, relief="flat", font=("Consolas", 10),
+        )
+        output.pack(fill="both", expand=True)
+
+        def render(title: str, lines: list[str]) -> None:
+            output.delete("1.0", "end")
+            output.insert("1.0", title + "\n" + "=" * 42 + "\n" + "\n".join(lines))
+
+        def resolve() -> None:
+            try:
+                from chocobot.engine.network.diagnostics import lookup_host, local_network_info
+                host = host_entry.get().strip()
+                result = lookup_host(host)
+                local = local_network_info()
+                lines = [f"Host lokal: {local['hostname']}", "Alamat lokal yang terdeteksi:"]
+                lines.extend("  " + address for address in local["addresses"] or ["Tidak tersedia"])
+                lines.extend(["", f"Host target: {result['host']}"])
+                if result["ok"]:
+                    lines.append("Alamat hasil resolusi DNS:")
+                    lines.extend("  " + address for address in result["addresses"])
+                else:
+                    lines.append(result["error"] or "Resolusi tidak berhasil.")
+                lines.append("")
+                lines.append("DNS menggunakan resolver sistem. Tidak ada permintaan HTTP yang dijalankan.")
+                render("INFORMASI DNS DAN ALAMAT", lines)
+            except (OSError, ValueError) as exc:
+                messagebox.showerror("Diagnostik gagal", str(exc), parent=parent)
+
+        def ping() -> None:
+            try:
+                from chocobot.engine.network.diagnostics import ping_host
+                result = ping_host(host_entry.get().strip())
+                render("HASIL PING", [
+                    f"Host: {result['host']}",
+                    f"Status: {'Berhasil' if result['ok'] else 'Tidak berhasil'}",
+                    "",
+                    result.get("output", ""),
+                    "",
+                    "Ping mengirim satu permintaan echo dan bukan pemeriksaan reputasi keamanan.",
+                ])
+            except (OSError, ValueError) as exc:
+                messagebox.showerror("Ping gagal", str(exc), parent=parent)
+
+        def tcp() -> None:
+            try:
+                from chocobot.engine.network.diagnostics import probe_tcp_port
+                port = int(port_entry.get().strip())
+                result = probe_tcp_port(host_entry.get().strip(), port)
+                render("HASIL TES TCP", [
+                    f"Host: {result['host']}",
+                    f"Port: {result['port']}",
+                    f"Status: {'Terhubung' if result['ok'] else 'Tidak terhubung'}",
+                    result["message"],
+                    "",
+                    "Tes ini mencoba satu koneksi TCP dengan timeout terbatas.",
+                ])
+            except (OSError, ValueError) as exc:
+                messagebox.showerror("Tes TCP gagal", str(exc), parent=parent)
+
+        action_buttons = tk.Frame(controls, bg=styles.PANEL)
+        action_buttons.grid(row=2, column=0, columnspan=2, sticky="w", padx=14, pady=(0, 14))
+        for label, command in (("DNS / IP lokal", resolve), ("Ping 1x", ping), ("Tes port TCP", tcp)):
+            tk.Button(
+                action_buttons, text=label, command=command, bg=styles.CYAN if label == "DNS / IP lokal" else styles.PANEL,
+                fg="#071014" if label == "DNS / IP lokal" else styles.TEXT,
+                relief="flat", padx=12, pady=8, cursor="hand2",
+            ).pack(side="left", padx=(0, 8))
+        render("DIAGNOSTIK SIAP", [
+            "Masukkan host tanpa https:// atau path.",
+            "Gunakan tes port hanya untuk host/perangkat yang memang berhak lu periksa.",
+            "Tidak ada pemindaian massal dan tidak ada perubahan konfigurasi jaringan.",
+        ])
 
     def page_monitor(
         self,
         parent: tk.Frame,
     ) -> None:
-        """Monitor page."""
-
-        self._simple_info(
+        """Display a manual, bounded snapshot of resource and process usage."""
+        self._page_title(
             parent,
-            "Monitor",
-            "Process and system monitoring interface",
-            [
-                (
-                    "Process Monitor",
-                    "Process list and status",
-                ),
-                (
-                    "CPU",
-                    "CPU usage view",
-                ),
-                (
-                    "RAM",
-                    "Memory usage view",
-                ),
-                (
-                    "Disk",
-                    "Disk activity view",
-                ),
-                (
-                    "Network Usage",
-                    "Network activity view",
-                ),
-            ],
+            "Monitor Sistem",
+            "Snapshot CPU, RAM, disk, dan proses lokal. Pembaruan dilakukan hanya ketika tombol ditekan.",
         )
+        toolbar = tk.Frame(parent, bg=styles.APP_BG)
+        toolbar.pack(fill="x", pady=(0, 12))
+        output = tk.Text(
+            parent, wrap="none", bg=styles.PANEL, fg=styles.TEXT,
+            insertbackground=styles.CYAN, relief="flat", font=("Consolas", 10),
+        )
+        output.pack(fill="both", expand=True)
 
-    # ==================================================================
-    # SETTINGS
-    # ==================================================================
+        def show_text(value: str) -> None:
+            output.configure(state="normal")
+            output.delete("1.0", "end")
+            output.insert("1.0", value)
+            output.configure(state="disabled")
+
+        def refresh_resources() -> None:
+            try:
+                from chocobot.engine.system.resource_monitor import get_resource_snapshot
+                snapshot = get_resource_snapshot(cpu_interval_seconds=0.2)
+                cpu = snapshot.get("cpu", {})
+                mem = snapshot.get("memory", {})
+                disk = snapshot.get("storage", {})
+                lines = [
+                    "SNAPSHOT SUMBER DAYA",
+                    "=" * 48,
+                    f"Waktu lokal: {snapshot.get('timestamp', '-')}",
+                    f"Platform: {snapshot.get('platform', '-')}",
+                    f"CPU: {cpu.get('usage_percent') if cpu.get('usage_percent') is not None else 'tidak tersedia'}%",
+                    f"Prosesor logis: {cpu.get('logical_processors', 0)}",
+                    f"RAM terpakai: {mem.get('percent') if mem.get('percent') is not None else 'tidak tersedia'}%",
+                    f"RAM digunakan: {mem.get('used_bytes', 0) / (1024**3):.2f} GiB",
+                    f"RAM tersedia: {mem.get('available_bytes', 0) / (1024**3):.2f} GiB",
+                    f"Disk terpakai: {disk.get('percent') if disk.get('percent') is not None else 'tidak tersedia'}%",
+                    f"Lokasi disk: {disk.get('path', '-')}",
+                    f"Disk terpakai: {disk.get('used_bytes', 0) / (1024**3):.2f} GiB",
+                    f"Disk kosong: {disk.get('free_bytes', 0) / (1024**3):.2f} GiB",
+                    "",
+                    "Snapshot hanya mengamati metrik. Tidak ada proses dihentikan atau prioritas yang diubah.",
+                ]
+                show_text("\n".join(lines))
+            except Exception as exc:
+                show_text(f"Monitor sumber daya gagal: {type(exc).__name__}: {exc}")
+
+        def refresh_processes() -> None:
+            try:
+                from chocobot.engine.system.process_monitor import get_process_snapshot
+                snapshot = get_process_snapshot(limit=25)
+                lines = [
+                    "PROSES TERATAS BERDASARKAN MEMORI",
+                    "=" * 76,
+                    f"Proses ditampilkan: {snapshot.get('count', 0)}",
+                    f"Platform: {snapshot.get('platform', '-')}",
+                    "",
+                    f"{'PID':>8}  {'MEMORI (MiB)':>14}  NAMA PROSES",
+                    "-" * 76,
+                ]
+                for item in snapshot.get("processes", []):
+                    lines.append(
+                        f"{item.get('pid', 0):>8}  {item.get('memory_bytes', 0) / (1024**2):>14.1f}  {item.get('name', 'unknown')}"
+                    )
+                lines.extend([
+                    "",
+                    "Daftar ini bersifat observasi lokal. Tidak ada proses yang dihentikan atau dimodifikasi.",
+                ])
+                show_text("\n".join(lines))
+            except Exception as exc:
+                show_text(f"Daftar proses gagal dibaca: {type(exc).__name__}: {exc}")
+
+        for label, command in (
+            ("Snapshot CPU / RAM / Disk", refresh_resources),
+            ("Daftar proses", refresh_processes),
+        ):
+            tk.Button(
+                toolbar, text=label, command=command,
+                bg=styles.CYAN if label.startswith("Snapshot") else styles.PANEL,
+                fg="#071014" if label.startswith("Snapshot") else styles.TEXT,
+                relief="flat", padx=12, pady=8, cursor="hand2",
+            ).pack(side="left", padx=(0, 8))
+        refresh_resources()
 
     def page_settings(
         self,

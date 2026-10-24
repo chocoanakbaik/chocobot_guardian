@@ -15,6 +15,8 @@ Pastikan tidak mengubah nilai konstanta ini pada saat aplikasi berjalan,
 karena dapat menyebabkan ketidakkonsistenan antar modul.
 """
 
+import os
+import sys
 from pathlib import Path
 
 # ---------------------------------------------------------------------------
@@ -56,25 +58,33 @@ BASE_DIR = Path(__file__).resolve().parent
 # Folder root proyek (satu tingkat di atas folder chocobot/)
 ROOT_DIR = BASE_DIR.parent
 
-# Folder data lokal aplikasi (log, konfigurasi, karantina, whitelist, bahasa)
-DATA_DIR = BASE_DIR / "data"
+# Lokasi data pengguna. Jangan simpan konfigurasi/log di folder instalasi.
+if sys.platform == "win32":
+    _user_data_root = Path(os.environ.get("LOCALAPPDATA") or (Path.home() / "AppData" / "Local"))
+    DATA_DIR = _user_data_root / "ChocobotGuardian"
+elif sys.platform == "darwin":
+    DATA_DIR = Path.home() / "Library" / "Application Support" / "ChocobotGuardian"
+else:
+    DATA_DIR = Path(os.environ.get("XDG_DATA_HOME") or (Path.home() / ".local" / "share")) / "ChocobotGuardian"
 
-# Subfolder data
+# Data operasional berada di folder pengguna.
 LOG_DIR = DATA_DIR / "logs"
 QUARANTINE_DIR = DATA_DIR / "quarantine"
 WHITELIST_DIR = DATA_DIR / "whitelist"
-LANGUAGE_DIR = DATA_DIR / "language"
+ICONS_DIR = DATA_DIR / "icons"
 
-# Folder aset visual
-ASSETS_DIR = BASE_DIR / "assets"
+# Aset bawaan hanya dibaca dari paket aplikasi.
+RESOURCE_DATA_DIR = BASE_DIR / "data"
+LANGUAGE_DIR = RESOURCE_DATA_DIR / "language"
+# Shared read-only assets are kept at the repository/distribution root.
+ASSETS_DIR = ROOT_DIR / "assets"
 IMAGES_DIR = ASSETS_DIR / "images"
-ICONS_DIR = ASSETS_DIR / "icons"
 FONTS_DIR = ASSETS_DIR / "fonts"
 
-# File logo utama
+# File logo utama (aset bawaan)
 LOGO_PATH = IMAGES_DIR / "logo.png"
 
-# File ikon Windows (dikonversi dari logo.png)
+# File ikon yang dihasilkan (ditulis ke data pengguna)
 LOGO_ICO_PATH = ICONS_DIR / "logo.ico"
 
 # ---------------------------------------------------------------------------
