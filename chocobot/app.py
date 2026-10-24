@@ -374,18 +374,23 @@ class ChocobotApp:
         self._load_sidebar_logo()
 
         if self._logo_img is not None:
-            self.logo_label = tk.Label(
-                self.brand,
-                image=self._logo_img,
-                bg=styles.SIDEBAR_BG,
-                bd=0,
-            )
-
-            self.logo_label.pack(
-                side="left",
-                padx=(18, 10),
-                pady=15,
-            )
+            try:
+                self.logo_label = tk.Label(
+                    self.brand,
+                    image=self._logo_img,
+                    bg=styles.SIDEBAR_BG,
+                    bd=0,
+                )
+                self.logo_label.pack(
+                    side="left",
+                    padx=(18, 10),
+                    pady=15,
+                )
+            except tk.TclError:
+                # The optional brand image must never prevent startup. The
+                # text wordmark below remains available as a safe fallback.
+                self.logo_label = None
+                self._logo_img = None
 
         brand_text = tk.Frame(
             self.brand,
