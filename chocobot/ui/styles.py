@@ -255,7 +255,7 @@ SHADOW_SOFT = "#06090c"
 # Tkinter paling aman menggunakan tuple untuk font configuration.
 # Namun string lama tetap dipertahankan untuk compatibility.
 
-FONT_FAMILY = "Segoe UI"
+FONT_FAMILY = "Arial"  # Avoid Tk font-descriptor parsing failures on older Windows/Tcl builds.
 
 FONT_FAMILY_FALLBACK = "Arial"
 
