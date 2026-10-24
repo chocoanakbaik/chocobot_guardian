@@ -2014,40 +2014,83 @@ class ChocobotApp:
         self,
         parent: tk.Frame,
     ) -> None:
-        """System page."""
-
-        self._simple_info(
+        """Show a real, read-only device and operating-system snapshot."""
+        self._page_title(
             parent,
-            "System",
-            "Windows version, architecture, CPU, RAM, "
-            "storage and device information",
-            [
-                (
-                    "Windows",
-                    "Operating system details",
-                ),
-                (
-                    "Architecture",
-                    "System architecture",
-                ),
-                (
-                    "CPU",
-                    "Processor information",
-                ),
-                (
-                    "RAM",
-                    "Memory information",
-                ),
-                (
-                    "Storage",
-                    "Storage overview",
-                ),
-            ],
+            "Informasi Perangkat",
+            "Informasi OS, runtime, CPU, memori, GPU, dan penyimpanan yang terbaca secara lokal.",
         )
+        toolbar = tk.Frame(parent, bg=styles.APP_BG)
+        toolbar.pack(fill="x", pady=(0, 12))
+        output = tk.Text(
+            parent, wrap="word", bg=styles.PANEL, fg=styles.TEXT,
+            insertbackground=styles.CYAN, relief="flat", font=("Consolas", 10),
+        )
+        output.pack(fill="both", expand=True)
 
-    # ==================================================================
-    # NETWORK
-    # ==================================================================
+        def show_text(value: str) -> None:
+            output.configure(state="normal")
+            output.delete("1.0", "end")
+            output.insert("1.0", value)
+            output.configure(state="disabled")
+
+        def refresh() -> None:
+            try:
+                from chocobot.engine.system.sysinfo import get_system_info
+                from chocobot.engine.system.device_discovery import discover_device
+                info = get_system_info()
+                profile = discover_device()
+                os_info = info.get("os", {})
+                runtime = info.get("runtime", {})
+                cpu = info.get("cpu", {})
+                memory = info.get("memory", {})
+                gpu = info.get("gpu", {})
+                storage = info.get("storage", {})
+                device = profile.get("device", {})
+                capabilities = profile.get("capabilities", {})
+                lines = [
+                    "INFORMASI PERANGKAT",
+                    "=" * 48,
+                    f"Sistem operasi: {os_info.get('name', '-') } {os_info.get('release', '')}",
+                    f"Versi/build OS: {os_info.get('version', '-')}",
+                    f"Arsitektur: {os_info.get('architecture', '-')}",
+                    f"Nama perangkat: {os_info.get('hostname', '-')}",
+                    f"Python/runtime: {runtime.get('implementation', '-')} {runtime.get('version', '-')}",
+                    "",
+                    "PROSESOR",
+                    f"Model: {cpu.get('name', '-')}",
+                    f"Arsitektur CPU: {cpu.get('architecture', '-')}",
+                    f"Prosesor logis: {cpu.get('logical_processors', 0)}",
+                    "",
+                    "MEMORI",
+                    f"RAM total: {memory.get('total_gib', 0)} GiB",
+                    f"RAM terpakai: {memory.get('used_gib', 0)} GiB ({memory.get('used_percent', 0)}%)",
+                    f"RAM tersedia: {memory.get('available_gib', 0)} GiB",
+                    "",
+                    "GRAFIS",
+                    *([f"- {item}" for item in gpu.get("adapters", [])] or ["GPU/display adapter tidak tersedia melalui metode standar."]),
+                    "",
+                    "PENYIMPANAN",
+                    f"Lokasi: {storage.get('path', '-')}",
+                    f"Total: {storage.get('total_gib', 0)} GiB",
+                    f"Terpakai: {storage.get('used_gib', 0)} GiB ({storage.get('used_percent', 0)}%)",
+                    f"Kosong: {storage.get('free_gib', 0)} GiB",
+                    "",
+                    f"Profil memori: {device.get('memory_tier', 'unknown')}",
+                    f"Python runtime tersedia: {capabilities.get('python_runtime', False)}",
+                    f"Folder kerja writable: {capabilities.get('writable_working_directory', False)}",
+                    "",
+                    "Data hanya dibaca secara lokal. Deteksi bukan jaminan kompatibilitas setiap fitur atau versi Windows.",
+                ]
+                show_text("\n".join(str(line) for line in lines))
+            except Exception as exc:
+                show_text(f"Snapshot gagal dibaca: {type(exc).__name__}: {exc}")
+
+        tk.Button(
+            toolbar, text="Perbarui informasi", command=refresh,
+            bg=styles.CYAN, fg="#071014", relief="flat", padx=14, pady=8, cursor="hand2",
+        ).pack(side="left")
+        refresh()
 
     def page_network(
         self,
@@ -2158,39 +2201,90 @@ class ChocobotApp:
         self,
         parent: tk.Frame,
     ) -> None:
-        """Monitor page."""
-
-        self._simple_info(
+        """Display a manual, bounded snapshot of resource and process usage."""
+        self._page_title(
             parent,
-            "Monitor",
-            "Process and system monitoring interface",
-            [
-                (
-                    "Process Monitor",
-                    "Process list and status",
-                ),
-                (
-                    "CPU",
-                    "CPU usage view",
-                ),
-                (
-                    "RAM",
-                    "Memory usage view",
-                ),
-                (
-                    "Disk",
-                    "Disk activity view",
-                ),
-                (
-                    "Network Usage",
-                    "Network activity view",
-                ),
-            ],
+            "Monitor Sistem",
+            "Snapshot CPU, RAM, disk, dan proses lokal. Pembaruan dilakukan hanya ketika tombol ditekan.",
         )
+        toolbar = tk.Frame(parent, bg=styles.APP_BG)
+        toolbar.pack(fill="x", pady=(0, 12))
+        output = tk.Text(
+            parent, wrap="none", bg=styles.PANEL, fg=styles.TEXT,
+            insertbackground=styles.CYAN, relief="flat", font=("Consolas", 10),
+        )
+        output.pack(fill="both", expand=True)
 
-    # ==================================================================
-    # SETTINGS
-    # ==================================================================
+        def show_text(value: str) -> None:
+            output.configure(state="normal")
+            output.delete("1.0", "end")
+            output.insert("1.0", value)
+            output.configure(state="disabled")
+
+        def refresh_resources() -> None:
+            try:
+                from chocobot.engine.system.resource_monitor import get_resource_snapshot
+                snapshot = get_resource_snapshot(cpu_interval_seconds=0.2)
+                cpu = snapshot.get("cpu", {})
+                mem = snapshot.get("memory", {})
+                disk = snapshot.get("storage", {})
+                lines = [
+                    "SNAPSHOT SUMBER DAYA",
+                    "=" * 48,
+                    f"Waktu lokal: {snapshot.get('timestamp', '-')}",
+                    f"Platform: {snapshot.get('platform', '-')}",
+                    f"CPU: {cpu.get('usage_percent') if cpu.get('usage_percent') is not None else 'tidak tersedia'}%",
+                    f"Prosesor logis: {cpu.get('logical_processors', 0)}",
+                    f"RAM terpakai: {mem.get('percent') if mem.get('percent') is not None else 'tidak tersedia'}%",
+                    f"RAM digunakan: {mem.get('used_bytes', 0) / (1024**3):.2f} GiB",
+                    f"RAM tersedia: {mem.get('available_bytes', 0) / (1024**3):.2f} GiB",
+                    f"Disk terpakai: {disk.get('percent') if disk.get('percent') is not None else 'tidak tersedia'}%",
+                    f"Lokasi disk: {disk.get('path', '-')}",
+                    f"Disk terpakai: {disk.get('used_bytes', 0) / (1024**3):.2f} GiB",
+                    f"Disk kosong: {disk.get('free_bytes', 0) / (1024**3):.2f} GiB",
+                    "",
+                    "Snapshot hanya mengamati metrik. Tidak ada proses dihentikan atau prioritas yang diubah.",
+                ]
+                show_text("\n".join(lines))
+            except Exception as exc:
+                show_text(f"Monitor sumber daya gagal: {type(exc).__name__}: {exc}")
+
+        def refresh_processes() -> None:
+            try:
+                from chocobot.engine.system.process_monitor import get_process_snapshot
+                snapshot = get_process_snapshot(limit=25)
+                lines = [
+                    "PROSES TERATAS BERDASARKAN MEMORI",
+                    "=" * 76,
+                    f"Proses ditampilkan: {snapshot.get('count', 0)}",
+                    f"Platform: {snapshot.get('platform', '-')}",
+                    "",
+                    f"{'PID':>8}  {'MEMORI (MiB)':>14}  NAMA PROSES",
+                    "-" * 76,
+                ]
+                for item in snapshot.get("processes", []):
+                    lines.append(
+                        f"{item.get('pid', 0):>8}  {item.get('memory_bytes', 0) / (1024**2):>14.1f}  {item.get('name', 'unknown')}"
+                    )
+                lines.extend([
+                    "",
+                    "Daftar ini bersifat observasi lokal. Tidak ada proses yang dihentikan atau dimodifikasi.",
+                ])
+                show_text("\n".join(lines))
+            except Exception as exc:
+                show_text(f"Daftar proses gagal dibaca: {type(exc).__name__}: {exc}")
+
+        for label, command in (
+            ("Snapshot CPU / RAM / Disk", refresh_resources),
+            ("Daftar proses", refresh_processes),
+        ):
+            tk.Button(
+                toolbar, text=label, command=command,
+                bg=styles.CYAN if label.startswith("Snapshot") else styles.PANEL,
+                fg="#071014" if label.startswith("Snapshot") else styles.TEXT,
+                relief="flat", padx=12, pady=8, cursor="hand2",
+            ).pack(side="left", padx=(0, 8))
+        refresh_resources()
 
     def page_settings(
         self,
