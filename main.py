@@ -193,7 +193,8 @@ def _run_self_test() -> None:
         if not {"executable-or-script", "double-extension"}.issubset(codes):
             raise RuntimeError("File analyzer self-test failed.")
 
-    print("PASS: URL inspection, file hashing, and file analyzer.")
+    if sys.stdout is not None:
+        print("PASS: URL inspection, file hashing, and file analyzer.")
 
 
 if __name__ == "__main__":
@@ -201,7 +202,8 @@ if __name__ == "__main__":
         try:
             _run_self_test()
         except Exception as exc:
-            print(f"SELF-TEST FAILED: {type(exc).__name__}: {exc}")
+            if sys.stderr is not None:
+                print(f"SELF-TEST FAILED: {type(exc).__name__}: {exc}")
             raise
         sys.exit(0)
 
