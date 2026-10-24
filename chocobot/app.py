@@ -1662,7 +1662,7 @@ class ChocobotApp:
             relief="flat", padx=14, pady=8, cursor="hand2",
         ).pack(anchor="w", padx=18, pady=(0, 18))
 
-        def page_link(
+    def page_link(
         self,
         parent: tk.Frame,
     ) -> None:
@@ -1722,11 +1722,11 @@ class ChocobotApp:
 
         RoundedButton(
             box, text="Analisis", command=analyze, width=130, height=34,
-            bg=styles.CYAN, fg="#071014,
+            bg=styles.CYAN, fg="#071014",
         ).pack(anchor="w", padx=18, pady=12)
         analyze()
 
-        def page_files(
+    def page_files(
         self,
         parent: tk.Frame,
     ) -> None:
@@ -1806,7 +1806,7 @@ class ChocobotApp:
             ).pack(side="left", padx=(0, 8))
         show_text("Pilih salah satu utilitas di atas.\nFolder scan membatasi penelusuran hingga 10.000 file secara default.")
 
-        def page_converter(
+    def page_converter(
         self,
         parent: tk.Frame,
     ) -> None:
