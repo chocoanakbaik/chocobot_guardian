@@ -172,7 +172,39 @@ def main() -> None:
     _run_app()
 
 
+def _run_self_test() -> None:
+    """Run a deterministic, GUI-free smoke test for packaging checks."""
+    from tempfile import TemporaryDirectory
+    from chocobot.engine.file_tools.hashing import hash_file
+    from chocobot.engine.link.inspector import inspect_url
+    from chocobot.engine.security.file_analyzer import analyze_file
+
+    url_result = inspect_url("https://example.com/")
+    if not url_result.get("valid") or url_result.get("host") != "example.com":
+        raise RuntimeError("URL inspector self-test failed.")
+
+    with TemporaryDirectory(prefix="chocobot-self-test-") as folder:
+        sample = Path(folder) / "invoice.pdf.exe"
+        sample.write_bytes(b"MZ self-test")
+        if "sha256" not in hash_file(sample, ("sha256",)):
+            raise RuntimeError("File hashing self-test failed.")
+        report = analyze_file(sample)
+        codes = {item["code"] for item in report["notes"]}
+        if not {"executable-or-script", "double-extension"}.issubset(codes):
+            raise RuntimeError("File analyzer self-test failed.")
+
+    print("PASS: URL inspection, file hashing, and file analyzer.")
+
+
 if __name__ == "__main__":
+    if "--self-test" in sys.argv:
+        try:
+            _run_self_test()
+        except Exception as exc:
+            print(f"SELF-TEST FAILED: {type(exc).__name__}: {exc}")
+            raise
+        sys.exit(0)
+
     try:
         main()
     except Exception:
