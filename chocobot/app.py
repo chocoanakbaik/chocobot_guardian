@@ -145,9 +145,9 @@ class ChocobotApp:
             "result_area": "Area hasil",
 
             "system_status": "STATUS SISTEM",
-            "protected": "Terlindungi",
+            "protected": "Pemeriksaan lokal aktif",
             "interface_ready":
-                "Antarmuka siap • Mode local-first",
+                "Utilitas berjalan lokal • beberapa modul masih tahap awal",
 
             "chocobot_title": "Chocobot",
             "chocobot_subtitle":
@@ -207,21 +207,16 @@ class ChocobotApp:
             "open_license": "Buka Halaman Lisensi",
         }
 
+        # Language packs are bundled read-only resources.
         lang_file = const.LANGUAGE_DIR / f"{lang}.json"
-
-        if lang_file.exists():
+        if lang_file.is_file():
             try:
-                with open(
-                    lang_file,
-                    "r",
-                    encoding="utf-8",
-                ) as file:
+                with open(lang_file, "r", encoding="utf-8") as file:
                     data = json.load(file)
-
                 if isinstance(data, dict):
                     default_texts.update(data)
-
-            except Exception:
+            except (OSError, json.JSONDecodeError, TypeError):
+                # Keep defaults if an optional language pack is invalid.
                 pass
 
         return default_texts
