@@ -23,6 +23,7 @@ import json
 import sys
 import webbrowser
 import tkinter as tk
+from tkinter import filedialog, messagebox
 from datetime import datetime
 from pathlib import Path
 
@@ -1601,313 +1602,211 @@ class ChocobotApp:
         self,
         parent: tk.Frame,
     ) -> None:
-        """Security center interface."""
-
+        """Local read-only file inspection; this is not an antivirus scanner."""
         self._page_title(
             parent,
-            "Security Center",
-            "Security tools and protection interface",
+            "Pusat Pemeriksaan File",
+            "Pemeriksaan lokal berbasis metadata dan signature terbatas. Tidak menghapus atau mengarantina file.",
         )
-
-        f = tk.Frame(
-            parent,
-            bg=styles.APP_BG,
+        panel = tk.Frame(parent, bg=styles.PANEL, highlightthickness=1, highlightbackground=styles.BORDER)
+        panel.pack(fill="both", expand=True, pady=(0, 12))
+        tk.Label(
+            panel,
+            text="Pilih file untuk memeriksa hash SHA-256, ekstensi, signature umum, dan indikator sederhana.",
+            bg=styles.PANEL, fg=styles.TEXT, font=styles.FONT_SUBTITLE, wraplength=780, justify="left",
+        ).pack(anchor="w", padx=18, pady=(18, 10))
+        output = tk.Text(
+            panel, height=18, wrap="word", bg=styles.ENTRY_BG, fg=styles.TEXT,
+            insertbackground=styles.CYAN, relief="flat", font=("Consolas", 10),
         )
+        output.pack(fill="both", expand=True, padx=18, pady=(0, 16))
+        output.insert("1.0", "Pemeriksaan ini bersifat read-only dan tidak membuktikan file aman.\n")
+        output.configure(state="disabled")
 
-        f.pack(
-            fill="both",
-            expand=True,
-        )
+        def inspect_selected() -> None:
+            selected = filedialog.askopenfilename(parent=parent, title="Pilih file untuk diperiksa")
+            if not selected:
+                return
+            try:
+                from chocobot.engine.security.file_analyzer import analyze_file
+                result = analyze_file(selected)
+                info = result["file"]
+                lines = [
+                    "HASIL PEMERIKSAAN LOKAL",
+                    "=" * 42,
+                    f"Nama: {info['name']}",
+                    f"Lokasi: {info['full_path']}",
+                    f"Ukuran: {info['size_bytes']:,} byte",
+                    f"Tipe: {info['mime_type']}",
+                    f"Perhatian: {result['overall_attention']}",
+                    f"SHA-256: {result['sha256']}",
+                    "",
+                    "INDIKATOR",
+                ]
+                if result["notes"]:
+                    for note in result["notes"]:
+                        lines.append(f"[{note['attention']}] {note['detail']}")
+                else:
+                    lines.append("Tidak ada indikator yang cocok dengan aturan sederhana.")
+                lines.extend(["", result["notice"]])
+                output.configure(state="normal")
+                output.delete("1.0", "end")
+                output.insert("1.0", "\n".join(lines))
+                output.configure(state="disabled")
+            except (OSError, ValueError) as exc:
+                messagebox.showerror("Pemeriksaan gagal", f"File tidak dapat diperiksa: {exc}", parent=parent)
 
-        items = [
-            (
-                "Quick Scan",
-                "Start a standard security scan workflow",
-                styles.RED,
-            ),
-            (
-                "Custom Scan",
-                "Choose scan scope and options",
-                styles.MAGENTA,
-            ),
-            (
-                "File Analysis",
-                "Inspect a selected file",
-                styles.PURPLE,
-            ),
-            (
-                "Quarantine",
-                "View isolated suspicious files",
-                styles.YELLOW,
-            ),
-            (
-                "Whitelist",
-                "Manage trusted items",
-                styles.GREEN,
-            ),
-            (
-                "Security Report",
-                "View analysis summaries and results",
-                styles.CYAN,
-            ),
-        ]
+        tk.Button(
+            panel, text="Pilih file dan periksa", command=inspect_selected,
+            bg=styles.CYAN, fg="#071014", activebackground=styles.CYAN,
+            relief="flat", padx=14, pady=8, cursor="hand2",
+        ).pack(anchor="w", padx=18, pady=(0, 18))
 
-        self._card_grid(
-            f,
-            items,
-            "security",
-            columns=2,
-        )
-
-    # ==================================================================
-    # LINK INSPECTOR
-    # ==================================================================
-
-    def page_link(
+        def page_link(
         self,
         parent: tk.Frame,
     ) -> None:
-        """Link inspector."""
-
+        """Offline URL structure and heuristic indicator inspection."""
         self._page_title(
             parent,
-            "Link Inspector",
-            "Detailed URL analysis interface",
+            "Inspektur Tautan",
+            "Pemeriksaan struktur URL secara lokal. Tidak membuka tautan atau menghubungi domain.",
         )
-
-        box = tk.Frame(
-            parent,
-            bg=styles.PANEL,
-            highlightthickness=1,
-            highlightbackground=styles.BORDER,
+        box = tk.Frame(parent, bg=styles.PANEL, highlightthickness=1, highlightbackground=styles.BORDER)
+        box.pack(fill="x", pady=(0, 12))
+        tk.Label(box, text="URL / Tautan", fg=styles.MUTED, bg=styles.PANEL, font=styles.FONT_SUBTITLE).pack(
+            anchor="w", padx=18, pady=(16, 6)
         )
-
-        box.pack(
-            fill="x",
-            pady=(0, 14),
-        )
-
-        tk.Label(
-            box,
-            text=self.t("url_label"),
-            fg=styles.MUTED,
-            bg=styles.PANEL,
-            font=styles.FONT_SUBTITLE,
-        ).pack(
-            anchor="w",
-            padx=18,
-            pady=(16, 6),
-        )
-
-        entry_frame = tk.Frame(
-            box,
-            bg=styles.ENTRY_BG,
-            highlightthickness=1,
-            highlightbackground=styles.BORDER,
-        )
-
-        entry_frame.pack(
-            fill="x",
-            padx=18,
-        )
-
         entry = tk.Entry(
-            entry_frame,
-            bg=styles.ENTRY_BG,
-            fg=styles.TEXT,
-            insertbackground=styles.CYAN,
-            selectbackground=styles.CYAN,
-            selectforeground="#071014",
-            relief="flat",
-            bd=0,
-            font=styles.FONT_ENTRY,
+            box, bg=styles.ENTRY_BG, fg=styles.TEXT, insertbackground=styles.CYAN,
+            relief="flat", bd=0, font=styles.FONT_ENTRY,
         )
-
-        entry.pack(
-            fill="x",
-            ipady=10,
-            padx=10,
+        entry.pack(fill="x", padx=18, ipady=10)
+        entry.insert(0, "https://example.com/path?query=value")
+        result = tk.Text(
+            parent, wrap="word", bg=styles.PANEL, fg=styles.TEXT,
+            insertbackground=styles.CYAN, relief="flat", font=("Consolas", 10), height=18,
         )
+        result.pack(fill="both", expand=True, pady=(0, 8))
 
-        entry.insert(
-            0,
-            "https://example.com/path?query=value",
-        )
-
-        def analyze():
-            self.link_result.configure(
-                text=(
-                    "Analysis placeholder — "
-                    "backend will be connected later"
-                ),
-                fg=styles.CYAN,
-            )
+        def analyze() -> None:
+            try:
+                from chocobot.engine.link.inspector import inspect_url
+                report = inspect_url(entry.get())
+                lines = ["HASIL PEMERIKSAAN URL", "=" * 42]
+                if not report.get("valid"):
+                    lines.append(report.get("error", "URL tidak valid."))
+                else:
+                    lines.extend([
+                        f"URL: {report['normalized_url']}",
+                        f"Host: {report['host']}",
+                        f"Skema: {report['scheme']}",
+                        f"Port: {report['port']}",
+                        f"Path: {report['path']}",
+                        f"HTTPS: {'Ya' if report['https'] else 'Tidak'}",
+                        f"Skor indikator: {report['score']}/100 ({report['level']})",
+                        "",
+                        "INDIKATOR YANG PERLU DITINJAU",
+                    ])
+                    if report["indicators"]:
+                        for item in report["indicators"]:
+                            lines.append(f"[+{item['points']}] {item['title']}: {item['detail']}")
+                    else:
+                        lines.append("Tidak ada indikator yang cocok dengan aturan sederhana.")
+                    lines.extend(["", report["notice"]])
+                result.delete("1.0", "end")
+                result.insert("1.0", "\n".join(lines))
+            except Exception as exc:
+                result.delete("1.0", "end")
+                result.insert("1.0", f"Pemeriksaan gagal: {type(exc).__name__}: {exc}")
 
         RoundedButton(
-            box,
-            text=self.t("analyze"),
-            command=analyze,
-            width=130,
-            height=34,
-            bg=styles.CYAN,
-            fg="#071014",
-        ).pack(
-            anchor="w",
-            padx=18,
-            pady=12,
-        )
+            box, text="Analisis", command=analyze, width=130, height=34,
+            bg=styles.CYAN, fg="#071014,
+        ).pack(anchor="w", padx=18, pady=12)
+        analyze()
 
-        self.link_result = tk.Label(
-            parent,
-            text=self.t("result_area"),
-            fg=styles.MUTED,
-            bg=styles.APP_BG,
-            font=styles.FONT_SUBTITLE,
-        )
-
-        self.link_result.pack(
-            anchor="w",
-            pady=(5, 8),
-        )
-
-        r = tk.Frame(
-            parent,
-            bg=styles.APP_BG,
-        )
-
-        r.pack(
-            fill="both",
-            expand=True,
-        )
-
-        cards = [
-            (
-                "URL Structure",
-                "Protocol, domain, subdomain, port, "
-                "path, query and fragment",
-                styles.CYAN,
-            ),
-            (
-                "Suspicious Patterns",
-                "Pattern indicators and brand "
-                "impersonation indicators",
-                styles.RED,
-            ),
-            (
-                "Risk Score",
-                "Score range, Risk Level "
-                "and explanation",
-                styles.YELLOW,
-            ),
-        ]
-
-        for i, (
-            title,
-            description,
-            accent,
-        ) in enumerate(cards):
-
-            r.grid_columnconfigure(
-                i,
-                weight=1,
-                uniform="link",
-            )
-
-            wrapper = self._create_card_wrapper(
-                r,
-                title=title,
-                text=description,
-                accent=accent,
-                command=None,
-                width=300,
-                height=115,
-            )
-
-            wrapper.grid(
-                row=0,
-                column=i,
-                sticky="nsew",
-                padx=(
-                    (0, 7)
-                    if i == 0
-                    else (
-                        7 if i == 1
-                        else (7, 0)
-                    )
-                ),
-            )
-
-    # ==================================================================
-    # FILE TOOLS
-    # ==================================================================
-
-    def page_files(
+        def page_files(
         self,
         parent: tk.Frame,
     ) -> None:
-        """File utility interface."""
-
+        """Working local file metadata, hashing, and folder inventory."""
         self._page_title(
             parent,
-            "File Tools",
-            "File and folder utility interface",
+            "Utilitas File",
+            "Informasi file, SHA-256, dan ringkasan folder. Semua pemeriksaan bersifat lokal dan read-only.",
         )
-
-        f = tk.Frame(
-            parent,
-            bg=styles.APP_BG,
+        toolbar = tk.Frame(parent, bg=styles.APP_BG)
+        toolbar.pack(fill="x", pady=(0, 12))
+        output = tk.Text(
+            parent, wrap="word", bg=styles.PANEL, fg=styles.TEXT,
+            insertbackground=styles.CYAN, relief="flat", font=("Consolas", 10),
         )
+        output.pack(fill="both", expand=True)
 
-        f.pack(
-            fill="both",
-            expand=True,
-        )
+        def show_text(text: str) -> None:
+            output.delete("1.0", "end")
+            output.insert("1.0", text)
 
-        items = [
-            (
-                "File Information",
-                "Name, size, format, location and date",
-                styles.CYAN,
-            ),
-            (
-                "File Analysis",
-                "Analysis result and file metadata",
-                styles.PURPLE,
-            ),
-            (
-                "Folder Analysis",
-                "Inspect folder contents",
-                styles.MAGENTA,
-            ),
-            (
-                "File Search",
-                "Find files by selected criteria",
-                styles.GREEN,
-            ),
-            (
-                "Hash / SHA-256",
-                "Hash generation and verification",
-                styles.YELLOW,
-            ),
-            (
-                "Large File Check",
-                "Identify large files",
-                styles.RED,
-            ),
-        ]
+        def inspect_file() -> None:
+            selected = filedialog.askopenfilename(parent=parent, title="Pilih file")
+            if not selected:
+                return
+            try:
+                from chocobot.engine.file_tools.file_info import get_file_info
+                from chocobot.engine.file_tools.hashing import hash_file
+                info = get_file_info(selected)
+                hashes = hash_file(selected, ("sha256",))
+                size = info["size_bytes"]
+                show_text(
+                    "INFORMASI FILE\n" + "=" * 42 + "\n"
+                    + f"Nama: {info['name']}\nLokasi: {info['full_path']}\n"
+                    + f"Ekstensi: {info['extension'] or '[tanpa ekstensi]'}\n"
+                    + f"Tipe MIME: {info['mime_type']}\nUkuran: {size:,} byte ({size / (1024 * 1024):.2f} MiB)\n"
+                    + f"Dianggap tersembunyi: {info['is_hidden']}\n"
+                    + f"SHA-256: {hashes['sha256']}\n\n"
+                    + "Hash cocok untuk memverifikasi bahwa byte file tidak berubah. Hash bukan bukti file aman."
+                )
+            except (OSError, ValueError) as exc:
+                messagebox.showerror("File tidak dapat diperiksa", str(exc), parent=parent)
 
-        self._card_grid(
-            f,
-            items,
-            "files",
-            columns=2,
-        )
+        def inspect_folder() -> None:
+            selected = filedialog.askdirectory(parent=parent, title="Pilih folder")
+            if not selected:
+                return
+            try:
+                from chocobot.engine.file_tools.folder_analysis import analyze_folder
+                report = analyze_folder(selected)
+                lines = [
+                    "RINGKASAN FOLDER", "=" * 42, f"Folder: {report['root']}",
+                    f"File ditemukan: {report['files_count']}",
+                    f"Subfolder ditemukan: {report['directories_count']}",
+                    f"Ukuran total yang dihitung: {report['total_bytes']:,} byte",
+                    f"File tak bisa diakses: {report['inaccessible_count']}",
+                    f"Hasil dibatasi: {'Ya' if report['truncated'] else 'Tidak'}",
+                    "", "EKSTENSI",
+                ]
+                lines.extend(f"{ext}: {count}" for ext, count in report["extension_counts"].items())
+                lines.extend(["", "10 FILE TERBESAR"])
+                lines.extend(f"{row['size_bytes']:>12,} byte  {row['name']}" for row in report["largest_files"])
+                lines.extend(["", "Ringkasan bersifat read-only; tautan simbolik dilewati."])
+                show_text("\n".join(lines))
+            except (OSError, ValueError) as exc:
+                messagebox.showerror("Folder tidak dapat dianalisis", str(exc), parent=parent)
 
-    # ==================================================================
-    # CONVERTER
-    # ==================================================================
+        for label, command in (
+            ("Informasi file + SHA-256", inspect_file),
+            ("Ringkasan folder", inspect_folder),
+        ):
+            tk.Button(
+                toolbar, text=label, command=command,
+                bg=styles.CYAN if label.startswith("Informasi") else styles.PANEL,
+                fg="#071014" if label.startswith("Informasi") else styles.TEXT,
+                relief="flat", padx=12, pady=8, cursor="hand2",
+            ).pack(side="left", padx=(0, 8))
+        show_text("Pilih salah satu utilitas di atas.\nFolder scan membatasi penelusuran hingga 10.000 file secara default.")
 
-    def page_converter(
+        def page_converter(
         self,
         parent: tk.Frame,
     ) -> None:
