@@ -2190,12 +2190,14 @@ class ChocobotApp:
             except (OSError, ValueError) as exc:
                 messagebox.showerror("Tes TCP gagal", str(exc), parent=parent)
 
+        action_buttons = tk.Frame(controls, bg=styles.PANEL)
+        action_buttons.grid(row=2, column=0, columnspan=2, sticky="w", padx=14, pady=(0, 14))
         for label, command in (("DNS / IP lokal", resolve), ("Ping 1x", ping), ("Tes port TCP", tcp)):
             tk.Button(
-                controls, text=label, command=command, bg=styles.CYAN if label == "DNS / IP lokal" else styles.PANEL,
+                action_buttons, text=label, command=command, bg=styles.CYAN if label == "DNS / IP lokal" else styles.PANEL,
                 fg="#071014" if label == "DNS / IP lokal" else styles.TEXT,
                 relief="flat", padx=12, pady=8, cursor="hand2",
-            ).pack(side="left", padx=14, pady=(0, 14))
+            ).pack(side="left", padx=(0, 8))
         render("DIAGNOSTIK SIAP", [
             "Masukkan host tanpa https:// atau path.",
             "Gunakan tes port hanya untuk host/perangkat yang memang berhak lu periksa.",
