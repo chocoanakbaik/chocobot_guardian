@@ -44,6 +44,8 @@ jobs:
         shell: pwsh
         run: |
           pyinstaller --noconfirm --clean --windowed --name ChocobotGuardian `
+            --add-data "assets;assets" `
+            --add-data "assets;assets" `
             --add-data "chocobot/data/language;chocobot/data/language" `
             --hidden-import PIL.ImageTk `
             main.py
