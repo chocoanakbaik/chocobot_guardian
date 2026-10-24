@@ -76,7 +76,8 @@ ICONS_DIR = DATA_DIR / "icons"
 # Aset bawaan hanya dibaca dari paket aplikasi.
 RESOURCE_DATA_DIR = BASE_DIR / "data"
 LANGUAGE_DIR = RESOURCE_DATA_DIR / "language"
-ASSETS_DIR = BASE_DIR / "assets"
+# Shared read-only assets are kept at the repository/distribution root.
+ASSETS_DIR = ROOT_DIR / "assets"
 IMAGES_DIR = ASSETS_DIR / "images"
 FONTS_DIR = ASSETS_DIR / "fonts"
 
