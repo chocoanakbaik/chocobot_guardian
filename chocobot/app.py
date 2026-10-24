@@ -2053,39 +2053,106 @@ class ChocobotApp:
         self,
         parent: tk.Frame,
     ) -> None:
-        """Network page."""
-
-        self._simple_info(
+        """Interactive DNS, local-address, ping and TCP diagnostics."""
+        self._page_title(
             parent,
-            "Network",
-            "Basic network diagnostics and inspection",
-            [
-                (
-                    "IP Information",
-                    "IP details",
-                ),
-                (
-                    "DNS Lookup",
-                    "DNS query interface",
-                ),
-                (
-                    "Ping",
-                    "Connectivity test interface",
-                ),
-                (
-                    "Connection Information",
-                    "Current connection view",
-                ),
-                (
-                    "Port Inspection",
-                    "Basic port inspection",
-                ),
-            ],
+            "Diagnostik Jaringan",
+            "Utilitas diagnostik dasar. Tes koneksi menghubungi host/port yang lu masukkan; tidak memindai jaringan secara massal.",
         )
+        controls = tk.Frame(parent, bg=styles.PANEL, highlightthickness=1, highlightbackground=styles.BORDER)
+        controls.pack(fill="x", pady=(0, 12))
+        tk.Label(controls, text="Host atau alamat IP", bg=styles.PANEL, fg=styles.MUTED).grid(
+            row=0, column=0, sticky="w", padx=14, pady=(14, 4)
+        )
+        host_entry = tk.Entry(
+            controls, bg=styles.ENTRY_BG, fg=styles.TEXT, insertbackground=styles.CYAN,
+            relief="flat", font=styles.FONT_ENTRY,
+        )
+        host_entry.insert(0, "localhost")
+        host_entry.grid(row=1, column=0, sticky="ew", padx=14, pady=(0, 12), ipady=7)
+        tk.Label(controls, text="Port TCP (untuk tes port)", bg=styles.PANEL, fg=styles.MUTED).grid(
+            row=0, column=1, sticky="w", padx=14, pady=(14, 4)
+        )
+        port_entry = tk.Entry(
+            controls, width=10, bg=styles.ENTRY_BG, fg=styles.TEXT, insertbackground=styles.CYAN,
+            relief="flat", font=styles.FONT_ENTRY,
+        )
+        port_entry.insert(0, "443")
+        port_entry.grid(row=1, column=1, sticky="ew", padx=14, pady=(0, 12), ipady=7)
+        controls.columnconfigure(0, weight=1)
 
-    # ==================================================================
-    # MONITOR
-    # ==================================================================
+        output = tk.Text(
+            parent, wrap="word", bg=styles.PANEL, fg=styles.TEXT,
+            insertbackground=styles.CYAN, relief="flat", font=("Consolas", 10),
+        )
+        output.pack(fill="both", expand=True)
+
+        def render(title: str, lines: list[str]) -> None:
+            output.delete("1.0", "end")
+            output.insert("1.0", title + "\n" + "=" * 42 + "\n" + "\n".join(lines))
+
+        def resolve() -> None:
+            try:
+                from chocobot.engine.network.diagnostics import lookup_host, local_network_info
+                host = host_entry.get().strip()
+                result = lookup_host(host)
+                local = local_network_info()
+                lines = [f"Host lokal: {local['hostname']}", "Alamat lokal yang terdeteksi:"]
+                lines.extend("  " + address for address in local["addresses"] or ["Tidak tersedia"])
+                lines.extend(["", f"Host target: {result['host']}"])
+                if result["ok"]:
+                    lines.append("Alamat hasil resolusi DNS:")
+                    lines.extend("  " + address for address in result["addresses"])
+                else:
+                    lines.append(result["error"] or "Resolusi tidak berhasil.")
+                lines.append("")
+                lines.append("DNS menggunakan resolver sistem. Tidak ada permintaan HTTP yang dijalankan.")
+                render("INFORMASI DNS DAN ALAMAT", lines)
+            except (OSError, ValueError) as exc:
+                messagebox.showerror("Diagnostik gagal", str(exc), parent=parent)
+
+        def ping() -> None:
+            try:
+                from chocobot.engine.network.diagnostics import ping_host
+                result = ping_host(host_entry.get().strip())
+                render("HASIL PING", [
+                    f"Host: {result['host']}",
+                    f"Status: {'Berhasil' if result['ok'] else 'Tidak berhasil'}",
+                    "",
+                    result.get("output", ""),
+                    "",
+                    "Ping mengirim satu permintaan echo dan bukan pemeriksaan reputasi keamanan.",
+                ])
+            except (OSError, ValueError) as exc:
+                messagebox.showerror("Ping gagal", str(exc), parent=parent)
+
+        def tcp() -> None:
+            try:
+                from chocobot.engine.network.diagnostics import probe_tcp_port
+                port = int(port_entry.get().strip())
+                result = probe_tcp_port(host_entry.get().strip(), port)
+                render("HASIL TES TCP", [
+                    f"Host: {result['host']}",
+                    f"Port: {result['port']}",
+                    f"Status: {'Terhubung' if result['ok'] else 'Tidak terhubung'}",
+                    result["message"],
+                    "",
+                    "Tes ini mencoba satu koneksi TCP dengan timeout terbatas.",
+                ])
+            except (OSError, ValueError) as exc:
+                messagebox.showerror("Tes TCP gagal", str(exc), parent=parent)
+
+        for label, command in (("DNS / IP lokal", resolve), ("Ping 1x", ping), ("Tes port TCP", tcp)):
+            tk.Button(
+                controls, text=label, command=command, bg=styles.CYAN if label == "DNS / IP lokal" else styles.PANEL,
+                fg="#071014" if label == "DNS / IP lokal" else styles.TEXT,
+                relief="flat", padx=12, pady=8, cursor="hand2",
+            ).pack(side="left", padx=14, pady=(0, 14))
+        render("DIAGNOSTIK SIAP", [
+            "Masukkan host tanpa https:// atau path.",
+            "Gunakan tes port hanya untuk host/perangkat yang memang berhak lu periksa.",
+            "Tidak ada pemindaian massal dan tidak ada perubahan konfigurasi jaringan.",
+        ])
 
     def page_monitor(
         self,
