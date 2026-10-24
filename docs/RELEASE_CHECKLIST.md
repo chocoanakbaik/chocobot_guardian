@@ -4,6 +4,7 @@ Current status: **NOT READY FOR SALE** until all mandatory checks have evidence.
 
 ## Automated checks
 - [ ] Python source compiles on Windows.
+- [ ] Desktop-runner UI smoke test builds the file, link, system, network, and monitor pages without an interaction or rendering exception.
 - [ ] Utility tests pass on Windows and Ubuntu.
 - [ ] PyInstaller build succeeds from the same source revision.
 - [ ] Packaged executable completes `--self-test` without opening the full GUI.
