@@ -3766,6 +3766,106 @@ class Notification(PremiumFrame):
 
 
 # ============================================================================
+# Legacy compatibility widgets used by older application page builders.
+# ============================================================================
+
+class RoundedCard(GlassCard):
+    """Compatibility card preserving the previous title/text/command signature."""
+
+    def __init__(
+        self,
+        master: Optional[tk.Misc] = None,
+        title: str = "",
+        text: str = "",
+        accent: str = styles.CYAN,
+        command: Callback = None,
+        width: Optional[int] = None,
+        height: Optional[int] = None,
+        **kwargs: Any,
+    ) -> None:
+        kwargs.setdefault("padding_x", styles.CARD_PAD_X)
+        kwargs.setdefault("padding_y", styles.CARD_PAD_Y)
+        kwargs.setdefault("hover", command is not None)
+        kwargs.setdefault("background", styles.CARD_BG)
+        kwargs.setdefault("border_color", accent if accent else styles.BORDER)
+        if width is not None:
+            kwargs["width"] = width
+        if height is not None:
+            kwargs["height"] = height
+        super().__init__(master, **kwargs)
+        self._legacy_command = command
+        if title:
+            tk.Label(
+                self.content,
+                text=title,
+                bg=self.normal_background,
+                fg=accent,
+                font=styles.FONT_CARD_TITLE,
+                anchor="w",
+                justify="left",
+            ).pack(fill="x", anchor="w")
+        if text:
+            tk.Label(
+                self.content,
+                text=text,
+                bg=self.normal_background,
+                fg=styles.TEXT_SECONDARY,
+                font=styles.FONT_CARD_DESC,
+                anchor="w",
+                justify="left",
+                wraplength=max(160, (width or 340) - 42),
+            ).pack(fill="x", anchor="w", pady=(5, 0))
+        if command is not None:
+            self._bind_legacy_command(self)
+
+    def _bind_legacy_command(self, widget: tk.Misc) -> None:
+        widget.configure(cursor="hand2") if hasattr(widget, "configure") else None
+        widget.bind("<Button-1>", self._invoke_legacy_command, add="+")
+        for child in widget.winfo_children():
+            self._bind_legacy_command(child)
+
+    def _invoke_legacy_command(self, _event: Optional[tk.Event] = None) -> None:
+        if self._legacy_command is not None:
+            self._legacy_command()
+
+
+class RoundedButton(PremiumButton):
+    """Compatibility wrapper accepting the old bg/fg options."""
+
+    def __init__(
+        self,
+        master: Optional[tk.Misc] = None,
+        text: str = "",
+        command: Callback = None,
+        width: Optional[int] = None,
+        height: int = styles.BUTTON_HEIGHT,
+        bg: Optional[str] = None,
+        fg: Optional[str] = None,
+        **kwargs: Any,
+    ) -> None:
+        supplied_accent = kwargs.pop("accent", None)
+        variant = kwargs.pop("variant", "primary" if bg else "default")
+        accent = supplied_accent or bg or styles.CYAN
+        super().__init__(
+            master,
+            text=text,
+            command=command,
+            accent=accent,
+            width=width,
+            height=height,
+            variant=variant,
+            **kwargs,
+        )
+        if bg:
+            self.normal_bg = bg
+            self.hover_bg = styles.BUTTON_HOVER_BG
+        if fg:
+            self.normal_fg = fg
+            self.hover_fg = fg
+        self._apply_colors(self.normal_bg, self.normal_fg)
+
+
+# ============================================================================
 # EXPORTS
 # ============================================================================
 
@@ -3797,4 +3897,6 @@ __all__ = [
     "AnimatedValue",
     "EmptyState",
     "Notification",
+    "RoundedCard",
+    "RoundedButton",
 ]
