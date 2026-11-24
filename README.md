@@ -1,10 +1,12 @@
 # Chocobot Guardian
 
+> **Repositori historis.** Arah proyek yang dahulu bernama Chocobot Guardian telah dilanjutkan dengan identitas dan implementasi baru sebagai [TCS LinkGuard](https://github.com/TheChocoStudiosSub/TCS-LinkGuard). Repositori ini menyimpan prototipe utilitas desktop Windows lama dan bukan implementasi aktif TCS LinkGuard. Jangan menyajikannya sebagai unduhan atau produk TCS yang sedang dirilis.
+
 **A lightweight, local-first intelligent guardian for Windows.**
 
 Chocobot Guardian (CG) is a desktop system utility project designed to help users inspect, monitor, diagnose, protect, and manage their computer through a lightweight local application.
 
-**Brand:** The Choco Studios (TCS). This project remains a separate product developed and maintained independently by Hasby Prasetya Saprudin as a solo developer. TCS is an umbrella branding identity, not a claim of formal corporate legal status.
+**Brand:** The Choco Studios (TCS), an independent multisector studio founded, owned, and managed by Hasby Prasetya Saprudin. This repository is a historical TCS project snapshot; it is not a separate external partner or an active product listing.
 
 CG is built with a strong focus on:
 
@@ -25,9 +27,9 @@ CG is built with a strong focus on:
 
 ## Project Status
 
-**Current stage: Foundation / Active Development**
+**Repository status: Historical snapshot / Superseded**
 
-The repository currently contains the application foundation, user interface structure, configuration system, logging system, splash screen, and the planned modular engine architecture.
+The repository preserves the earlier Windows utility foundation, including its user interface structure, configuration system, logging system, splash screen, and modular engine architecture. Further development of this implementation is not the current TCS LinkGuard roadmap.
 
 Some engine modules are still under development and may currently contain placeholder or empty implementations.
 
